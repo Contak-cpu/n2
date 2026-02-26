@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Product, Transaction, TransactionType, User, Supplier, Client, CheckoutLine, Promotion, Egreso, Restocking, AuditLog } from '../types';
 import { INITIAL_PRODUCTS, INITIAL_USERS, INITIAL_SUPPLIERS, INITIAL_CLIENTS, INITIAL_CHECKOUT_LINES, INITIAL_PROMOTIONS } from '../constants';
-import { getMockTransactions, getMockRestocking } from '../utils/mockData';
+import { getMockTransactions, getMockRestocking, getMockEgresos } from '../utils/mockData';
 
 export const useStore = () => {
   // --- AUTH STATE ---
@@ -44,7 +44,8 @@ export const useStore = () => {
 
   const [egresos, setEgresos] = useState<Egreso[]>(() => {
     const saved = localStorage.getItem('erp_egresos');
-    return saved ? JSON.parse(saved) : [];
+    if (saved && saved !== '[]') return JSON.parse(saved);
+    return getMockEgresos();
   });
 
   const [restocking, setRestocking] = useState<Restocking[]>(() => {

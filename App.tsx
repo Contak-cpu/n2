@@ -193,6 +193,7 @@ const App: React.FC = () => {
         <Reports
           transactions={store.transactions}
           products={store.products}
+          egresos={store.egresos}
           currentBalance={store.getBalance()}
         />
       )}

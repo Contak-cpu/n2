@@ -1,4 +1,4 @@
-import { Transaction, TransactionType, PaymentMethod, Restocking } from '../types';
+import { Transaction, TransactionType, PaymentMethod, Restocking, Egreso, EgresoCategory } from '../types';
 import { INITIAL_PRODUCTS, INITIAL_USERS, INITIAL_CLIENTS, INITIAL_CHECKOUT_LINES } from '../constants';
 
 const METHODS: (PaymentMethod | 'Manual')[] = [
@@ -95,4 +95,57 @@ export function getMockRestocking(): Restocking[] {
   }
 
   return list.sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
+}
+
+const EGRESO_CATEGORIES: { category: EgresoCategory; descriptions: string[]; min: number; max: number }[] = [
+  { category: 'Sueldos y Honorarios', descriptions: ['Sueldo cajero', 'Sueldo repositor', 'Sueldo supervisor', 'Horas extras', 'Aguinaldo'], min: 180000, max: 450000 },
+  { category: 'Alquiler', descriptions: ['Alquiler local', 'Alquiler depósito'], min: 250000, max: 450000 },
+  { category: 'Servicios (Luz/Gas/Internet)', descriptions: ['Factura Edenor', 'Factura Metrogas', 'Internet Fibertel', 'Factura luz', 'Gas'], min: 15000, max: 85000 },
+  { category: 'Compra de Mercadería', descriptions: ['Pedido proveedor bebidas', 'Reposición lácteos', 'Compra almacén', 'Mercadería carnes', 'Pedido mayorista'], min: 80000, max: 350000 },
+  { category: 'Mantenimiento', descriptions: ['Reparación heladera', 'Mantenimiento aire', 'Arreglo balanza', 'Limpieza profesional'], min: 15000, max: 120000 },
+  { category: 'Impuestos y Tasas', descriptions: ['IIBB', 'ARBA', 'Tasa municipal', 'Monotributo'], min: 20000, max: 150000 },
+  { category: 'Logística y Flete', descriptions: ['Flete mercadería', 'Envío pedido', 'Transporte'], min: 8000, max: 45000 },
+  { category: 'Otros', descriptions: ['Insumos oficina', 'Material limpieza', 'Publicidad', 'Gastos varios'], min: 5000, max: 40000 },
+];
+
+/** Genera egresos realistas de los últimos 3 meses (para demo en Finanzas, Egresos y Reportes). */
+export function getMockEgresos(): Egreso[] {
+  const admin = INITIAL_USERS.find(u => u.role === 'ADMIN');
+  const registeredBy = admin?.username ?? 'admin';
+  const list: Egreso[] = [];
+  let id = 3000;
+
+  const methods: (PaymentMethod | 'Transferencia')[] = [
+    PaymentMethod.CASH,
+    PaymentMethod.CARD,
+    'Transferencia',
+  ];
+
+  const today = new Date();
+  for (let monthOffset = 0; monthOffset < 3; monthOffset++) {
+    const base = new Date(today.getFullYear(), today.getMonth() - monthOffset, 1);
+    const daysInMonth = new Date(base.getFullYear(), base.getMonth() + 1, 0).getDate();
+
+    EGRESO_CATEGORIES.forEach(({ category, descriptions, min, max }) => {
+      const count = category === 'Sueldos y Honorarios' ? 4 : category === 'Alquiler' ? 1 : 1 + Math.floor(Math.random() * 2);
+      for (let i = 0; i < count; i++) {
+        const day = 1 + Math.floor(Math.random() * (daysInMonth - 1));
+        const date = new Date(base.getFullYear(), base.getMonth(), day);
+        if (date > today) continue;
+        const desc = descriptions[Math.floor(Math.random() * descriptions.length)];
+        const amount = Math.round(min + Math.random() * (max - min));
+        list.push({
+          id: String(id++),
+          date: date.toISOString().slice(0, 10),
+          amount,
+          category,
+          description: desc,
+          method: methods[Math.floor(Math.random() * methods.length)],
+          registeredBy,
+        });
+      }
+    });
+  }
+
+  return list.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 }
