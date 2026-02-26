@@ -45,10 +45,16 @@ export interface Transaction {
   clientName?: string;
   items?: CartItem[];
   lineId?: string;
+  branchId?: string;
   tax?: number;
   discount?: number;
   status?: TransactionStatus;
   paymentReference?: string;
+}
+
+export interface Branch {
+  id: string;
+  name: string;
 }
 
 export type PricingMode = 'RETAIL' | 'WHOLESALE';
@@ -96,6 +102,7 @@ export interface Client {
 export interface CheckoutLine {
   id: string;
   name: string;
+  branchId: string;
   cashierId?: string;
   status: 'OPEN' | 'CLOSED' | 'SUSPENDED';
   openedAt?: Date;
@@ -156,4 +163,30 @@ export interface Egreso {
   description: string;
   method: PaymentMethod | 'Transferencia';
   registeredBy: string;
+}
+
+// --- TRAZABILIDAD DISTRIBUCIÓN MAYORISTA ---
+
+export type DespachoEstado = 'PENDIENTE' | 'EN_CAMINO' | 'ENTREGADO';
+
+export interface DespachoItem {
+  productId: string;
+  name: string;
+  quantity: number;
+  unitPrice?: number;
+}
+
+export interface Despacho {
+  id: string;
+  date: string;
+  clientId?: string;
+  clientName: string;
+  branchId: string;
+  items: DespachoItem[];
+  quienLleva: string;
+  horaSalida: string;
+  medioSalida: string;
+  estado: DespachoEstado;
+  observaciones?: string;
+  transactionId?: string;
 }

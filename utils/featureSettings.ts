@@ -10,6 +10,7 @@ export interface FeatureSettings {
   moduloAuditoria: boolean;
   moduloCajas: boolean;
   moduloReportes: boolean;
+  moduloDistribucion: boolean;
 }
 
 const defaults: FeatureSettings = {
@@ -22,6 +23,7 @@ const defaults: FeatureSettings = {
   moduloAuditoria: true,
   moduloCajas: true,
   moduloReportes: true,
+  moduloDistribucion: true,
 };
 
 export function getFeatureSettings(): FeatureSettings {

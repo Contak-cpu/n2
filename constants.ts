@@ -1,4 +1,25 @@
-import { Product, User, Supplier, Client, CheckoutLine, Promotion } from './types';
+import { Product, User, Supplier, Client, CheckoutLine, Promotion, Branch } from './types';
+
+// ========== SUCURSALES ==========
+export const BRANCHES: Branch[] = [
+  { id: 'central', name: 'Sucursal Central' },
+  { id: 'cordoba', name: 'Sucursal Córdoba' },
+  { id: 'rio-cuarto', name: 'Sucursal Río Cuarto' },
+  { id: 'triny-9', name: 'Sucursal Triny 9 de Julio' },
+  { id: 'triny-2', name: 'Sucursal Triny 2' },
+];
+
+/** ID de la primera sucursal (Central) para migración de datos sin branchId */
+export const BRANCH_CENTRAL_ID = BRANCHES[0].id;
+
+/** Opciones para medio de salida en despachos */
+export const MEDIO_SALIDA_OPTIONS = [
+  'Vehículo propio',
+  'Cadete',
+  'Cliente retira',
+  'Transporte tercero',
+  'Otro',
+];
 
 // ========== PRODUCTOS - 88 Items de Supermercado Realista ==========
 
@@ -143,15 +164,18 @@ export const INITIAL_CLIENTS: Client[] = [
 ];
 
 // ========== LÍNEAS DE CAJA ==========
+// Repartidas entre las 5 sucursales para que cada una tenga cajas y pueda tener ventas mock
 export const INITIAL_CHECKOUT_LINES: CheckoutLine[] = [
-  { id: '1', name: 'Caja 1', cashierId: '2', status: 'CLOSED', totalSales: 0, transactionCount: 0 },
-  { id: '2', name: 'Caja 2', cashierId: '3', status: 'CLOSED', totalSales: 0, transactionCount: 0 },
-  { id: '3', name: 'Caja 3', cashierId: '4', status: 'CLOSED', totalSales: 0, transactionCount: 0 },
-  { id: '4', name: 'Caja Rápida', cashierId: undefined, status: 'CLOSED', totalSales: 0, transactionCount: 0 },
-  { id: '5', name: 'Caja Express', cashierId: undefined, status: 'CLOSED', totalSales: 0, transactionCount: 0 },
-  { id: '6', name: 'Caja Atención', cashierId: undefined, status: 'CLOSED', totalSales: 0, transactionCount: 0 },
-  { id: '7', name: 'Caja Preferente', cashierId: undefined, status: 'CLOSED', totalSales: 0, transactionCount: 0 },
-  { id: '8', name: 'Caja Logística', cashierId: undefined, status: 'CLOSED', totalSales: 0, transactionCount: 0 },
+  { id: '1', name: 'Caja 1', branchId: 'central', cashierId: '2', status: 'CLOSED', totalSales: 0, transactionCount: 0 },
+  { id: '2', name: 'Caja 2', branchId: 'central', cashierId: '3', status: 'CLOSED', totalSales: 0, transactionCount: 0 },
+  { id: '5', name: 'Caja Express', branchId: 'cordoba', cashierId: undefined, status: 'CLOSED', totalSales: 0, transactionCount: 0 },
+  { id: '6', name: 'Caja Atención', branchId: 'cordoba', cashierId: undefined, status: 'CLOSED', totalSales: 0, transactionCount: 0 },
+  { id: '7', name: 'Caja Preferente', branchId: 'rio-cuarto', cashierId: undefined, status: 'CLOSED', totalSales: 0, transactionCount: 0 },
+  { id: '8', name: 'Caja Logística', branchId: 'rio-cuarto', cashierId: undefined, status: 'CLOSED', totalSales: 0, transactionCount: 0 },
+  { id: '9', name: 'Caja Triny 9 - 1', branchId: 'triny-9', cashierId: undefined, status: 'CLOSED', totalSales: 0, transactionCount: 0 },
+  { id: '10', name: 'Caja Triny 9 - 2', branchId: 'triny-9', cashierId: undefined, status: 'CLOSED', totalSales: 0, transactionCount: 0 },
+  { id: '11', name: 'Caja Triny 2 - 1', branchId: 'triny-2', cashierId: undefined, status: 'CLOSED', totalSales: 0, transactionCount: 0 },
+  { id: '12', name: 'Caja Triny 2 - 2', branchId: 'triny-2', cashierId: undefined, status: 'CLOSED', totalSales: 0, transactionCount: 0 },
 ];
 
 // ========== PROMOCIONES ACTIVAS ==========

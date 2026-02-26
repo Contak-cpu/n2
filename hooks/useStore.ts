@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react';
-import { Product, Transaction, TransactionType, User, Supplier, Client, CheckoutLine, Promotion, Egreso, Restocking, AuditLog } from '../types';
-import { INITIAL_PRODUCTS, INITIAL_USERS, INITIAL_SUPPLIERS, INITIAL_CLIENTS, INITIAL_CHECKOUT_LINES, INITIAL_PROMOTIONS } from '../constants';
+import { Product, Transaction, TransactionType, User, Supplier, Client, CheckoutLine, Promotion, Egreso, Restocking, AuditLog, Despacho } from '../types';
+import { INITIAL_PRODUCTS, INITIAL_USERS, INITIAL_SUPPLIERS, INITIAL_CLIENTS, INITIAL_CHECKOUT_LINES, INITIAL_PROMOTIONS, BRANCH_CENTRAL_ID } from '../constants';
 import { getMockTransactions, getMockRestocking, getMockEgresos } from '../utils/mockData';
+
+export const SELECTED_BRANCH_ALL = 'ALL';
 
 export const useStore = () => {
   // --- AUTH STATE ---
@@ -32,9 +34,41 @@ export const useStore = () => {
     return saved ? JSON.parse(saved) : INITIAL_CLIENTS;
   });
 
+  // Siempre partimos de INITIAL_CHECKOUT_LINES (10 cajas, 5 sucursales); de lo guardado solo conservamos estado/cajero
   const [checkoutLines, setCheckoutLines] = useState<CheckoutLine[]>(() => {
-    const saved = localStorage.getItem('erp_checkout_lines');
-    return saved ? JSON.parse(saved) : INITIAL_CHECKOUT_LINES;
+    let raw: CheckoutLine[] = [];
+    try {
+      const saved = localStorage.getItem('erp_checkout_lines');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) raw = parsed;
+      }
+    } catch (_) { /* ignorar */ }
+    const savedById = raw.reduce((acc: Record<string, CheckoutLine>, l: CheckoutLine) => {
+      acc[l.id] = l;
+      return acc;
+    }, {});
+    return INITIAL_CHECKOUT_LINES.map((line) => {
+      const s = savedById[line.id];
+      if (!s) return { ...line };
+      return {
+        ...line,
+        status: s.status ?? line.status,
+        cashierId: s.cashierId,
+        openedAt: s.openedAt,
+        closedAt: s.closedAt,
+      };
+    });
+  });
+
+  const [selectedBranchId, setSelectedBranchId] = useState<string>(() => {
+    const saved = localStorage.getItem('erp_selected_branch');
+    return saved ?? SELECTED_BRANCH_ALL;
+  });
+
+  const [despachos, setDespachos] = useState<Despacho[]>(() => {
+    const saved = localStorage.getItem('erp_despachos');
+    return saved ? JSON.parse(saved) : [];
   });
 
   const [promotions, setPromotions] = useState<Promotion[]>(() => {
@@ -78,6 +112,8 @@ export const useStore = () => {
   useEffect(() => { localStorage.setItem('erp_suppliers', JSON.stringify(suppliers)); }, [suppliers]);
   useEffect(() => { localStorage.setItem('erp_clients', JSON.stringify(clients)); }, [clients]);
   useEffect(() => { localStorage.setItem('erp_checkout_lines', JSON.stringify(checkoutLines)); }, [checkoutLines]);
+  useEffect(() => { localStorage.setItem('erp_selected_branch', selectedBranchId); }, [selectedBranchId]);
+  useEffect(() => { localStorage.setItem('erp_despachos', JSON.stringify(despachos)); }, [despachos]);
   useEffect(() => { localStorage.setItem('erp_promotions', JSON.stringify(promotions)); }, [promotions]);
   useEffect(() => { localStorage.setItem('erp_egresos', JSON.stringify(egresos)); }, [egresos]);
   useEffect(() => { localStorage.setItem('erp_restocking', JSON.stringify(restocking)); }, [restocking]);
@@ -199,9 +235,31 @@ export const useStore = () => {
 
     return checkoutLines.map(line => ({
       ...line,
+      branchId: line.branchId ?? BRANCH_CENTRAL_ID,
       totalSales: byLine[line.id]?.totalSales ?? 0,
       transactionCount: byLine[line.id]?.transactionCount ?? 0,
     }));
+  };
+
+  /** Transacciones filtradas por sucursal (undefined branchId = Central). */
+  const getTransactionsByBranch = (branchId: string | null): Transaction[] => {
+    if (!branchId || branchId === SELECTED_BRANCH_ALL) return transactions;
+    return transactions.filter(t => (t.branchId ?? BRANCH_CENTRAL_ID) === branchId);
+  };
+
+  /** Líneas de caja filtradas por sucursal. */
+  const getCheckoutLinesByBranch = (branchId: string | null): CheckoutLine[] => {
+    if (!branchId || branchId === SELECTED_BRANCH_ALL) return getCheckoutLinesWithStats();
+    return getCheckoutLinesWithStats().filter(l => (l.branchId ?? BRANCH_CENTRAL_ID) === branchId);
+  };
+
+  const addDespacho = (despacho: Despacho) => {
+    setDespachos(prev => [despacho, ...prev]);
+    addAuditLog({ userId: currentUser?.id ?? '', action: 'Nuevo despacho', entityType: 'Despacho', entityId: despacho.id, details: { clientName: despacho.clientName } });
+  };
+
+  const updateDespacho = (id: string, updates: Partial<Despacho>) => {
+    setDespachos(prev => prev.map(d => d.id === id ? { ...d, ...updates } : d));
   };
 
   const addPromotion = (promotion: Promotion) => {
@@ -247,7 +305,14 @@ export const useStore = () => {
     suppliers,
     clients,
     checkoutLines,
+    selectedBranchId,
+    setSelectedBranchId,
     getCheckoutLinesWithStats,
+    getTransactionsByBranch,
+    getCheckoutLinesByBranch,
+    despachos,
+    addDespacho,
+    updateDespacho,
     promotions,
     egresos,
     restocking,

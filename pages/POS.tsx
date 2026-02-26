@@ -238,7 +238,7 @@ export const POS: React.FC<POSProps> = ({
 
       {/* Center: Product Catalog + Cart */}
       <div className="flex-1 flex flex-col lg:flex-row h-full overflow-hidden min-w-0">
-        <div className="flex-1 min-w-0 p-3 sm:p-4 lg:p-6 flex flex-col overflow-hidden min-h-0">
+        <div className="flex-1 min-w-0 p-3 sm:p-4 lg:p-6 flex flex-col overflow-hidden min-h-0 pr-4 lg:pr-6">
         <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 mb-3 sm:mb-4 flex-shrink-0">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
@@ -262,7 +262,7 @@ export const POS: React.FC<POSProps> = ({
           )}
         </div>
 
-        <div className="flex-1 overflow-y-auto grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-2 sm:gap-4 pb-4 content-start">
+        <div className="flex-1 overflow-y-auto overflow-x-hidden grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-2 sm:gap-4 pb-4 pr-1 content-start min-w-0">
           {filteredProducts.map(product => {
             const price = product.price;
             const isLowStock = product.stockGondola < 10;

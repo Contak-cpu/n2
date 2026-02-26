@@ -14,8 +14,9 @@ import { Users } from './pages/Users';
 import { Settings } from './pages/Settings';
 import { Cajas } from './pages/Cajas';
 import { Inicio } from './pages/Inicio';
+import { Distribucion } from './pages/Distribucion';
 import { useStore } from './hooks/useStore';
-import { INITIAL_USERS } from './constants';
+import { INITIAL_USERS, BRANCHES } from './constants';
 import { TransactionType, CartItem, Client, Transaction } from './types';
 
 const DEFAULT_TAB_BY_ROLE: Record<string, string> = {
@@ -53,6 +54,8 @@ const App: React.FC = () => {
     method: any,
     client: Client
   ): Transaction => {
+    const line = lineId ? store.getCheckoutLinesWithStats().find(l => l.id === lineId) : null;
+    const branchId = line?.branchId;
     const newTransaction: Transaction = {
       id: Date.now().toString(),
       date: new Date().toISOString(),
@@ -64,6 +67,7 @@ const App: React.FC = () => {
       clientName: client.name,
       items: cart,
       lineId,
+      branchId,
       status: 'COMPLETED',
     };
     store.addTransaction(newTransaction);
@@ -82,7 +86,7 @@ const App: React.FC = () => {
 
   const handleTabChange = (tab: string) => {
     const adminOnly = ['finance', 'egresos', 'suppliers', 'promotions', 'audit', 'users', 'settings'];
-    const supervisorAllowed = ['inicio', 'pos', 'inventory', 'reports', 'cajas'];
+    const supervisorAllowed = ['inicio', 'pos', 'inventory', 'reports', 'cajas', 'distribucion'];
     const cashierAllowed = ['inicio', 'pos'];
     const repositorAllowed = ['inicio', 'repositor'];
 
@@ -93,12 +97,18 @@ const App: React.FC = () => {
     if (role === 'REPOSITOR' && repositorAllowed.includes(tab)) { setActiveTab(tab); return; }
   };
 
+  const transactionsForView = store.getTransactionsByBranch(store.selectedBranchId);
+  const checkoutLinesForView = store.getCheckoutLinesByBranch(store.selectedBranchId);
+
   return (
     <Layout
       activeTab={activeTab}
       onTabChange={handleTabChange}
       currentUser={store.currentUser}
       onLogout={store.logout}
+      branches={BRANCHES}
+      selectedBranchId={store.selectedBranchId}
+      onSelectedBranchChange={store.setSelectedBranchId}
     >
       {/* INICIO - todos los roles (contenido según rol) */}
       {activeTab === 'inicio' && (
@@ -106,8 +116,8 @@ const App: React.FC = () => {
           currentUser={store.currentUser}
           products={store.products}
           restocking={store.restocking}
-          transactions={store.transactions}
-          checkoutLines={store.getCheckoutLinesWithStats()}
+          transactions={transactionsForView}
+          checkoutLines={checkoutLinesForView}
           users={store.users}
           currentBalance={store.getBalance()}
           egresos={store.egresos}
@@ -120,10 +130,10 @@ const App: React.FC = () => {
         <POS
           products={store.products}
           clients={store.clients}
-          checkoutLines={store.getCheckoutLinesWithStats()}
+          checkoutLines={checkoutLinesForView}
           users={INITIAL_USERS}
           currentUser={store.currentUser}
-          transactions={store.transactions}
+          transactions={transactionsForView}
           activePromotions={store.getActivePromotions()}
           onCheckout={handleCheckout}
           openCheckoutLine={store.openCheckoutLine}
@@ -180,7 +190,7 @@ const App: React.FC = () => {
       {/* CAJAS - Admin y Supervisor */}
       {activeTab === 'cajas' && (isAdmin || isSupervisor) && (
         <Cajas
-          checkoutLines={store.getCheckoutLinesWithStats()}
+          checkoutLines={checkoutLinesForView}
           users={store.users}
           currentUser={store.currentUser}
           onOpenLine={store.openCheckoutLine}
@@ -191,10 +201,22 @@ const App: React.FC = () => {
       {/* REPORTES - Admin y Supervisor */}
       {activeTab === 'reports' && (isAdmin || isSupervisor) && (
         <Reports
-          transactions={store.transactions}
+          transactions={transactionsForView}
           products={store.products}
           egresos={store.egresos}
           currentBalance={store.getBalance()}
+        />
+      )}
+
+      {/* DISTRIBUCIÓN / TRAZABILIDAD - Admin y Supervisor */}
+      {activeTab === 'distribucion' && (isAdmin || isSupervisor) && (
+        <Distribucion
+          despachos={store.despachos}
+          branches={BRANCHES}
+          clients={store.clients}
+          products={store.products}
+          onAddDespacho={store.addDespacho}
+          onUpdateDespacho={store.updateDespacho}
         />
       )}
 

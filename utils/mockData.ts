@@ -1,5 +1,5 @@
 import { Transaction, TransactionType, PaymentMethod, Restocking, Egreso, EgresoCategory } from '../types';
-import { INITIAL_PRODUCTS, INITIAL_USERS, INITIAL_CLIENTS, INITIAL_CHECKOUT_LINES } from '../constants';
+import { INITIAL_PRODUCTS, INITIAL_USERS, INITIAL_CLIENTS, INITIAL_CHECKOUT_LINES, BRANCHES } from '../constants';
 
 const METHODS: (PaymentMethod | 'Manual')[] = [
   PaymentMethod.CASH,
@@ -9,7 +9,17 @@ const METHODS: (PaymentMethod | 'Manual')[] = [
   'Manual',
 ];
 
-/** Genera 50+ transacciones de venta para hoy y ayer (para demo/reportes). */
+/** Líneas agrupadas por sucursal para repartir ventas mock en todas las sucursales */
+function getLinesByBranch() {
+  const map: Record<string, typeof INITIAL_CHECKOUT_LINES> = {};
+  BRANCHES.forEach((b) => { map[b.id] = []; });
+  INITIAL_CHECKOUT_LINES.forEach((l) => {
+    if (map[l.branchId]) map[l.branchId].push(l);
+  });
+  return map;
+}
+
+/** Genera transacciones de venta para hoy y ayer repartidas en las 5 sucursales (para demo/reportes). */
 export function getMockTransactions(): Transaction[] {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
@@ -17,7 +27,7 @@ export function getMockTransactions(): Transaction[] {
   yesterday.setDate(yesterday.getDate() - 1);
 
   const cashiers = INITIAL_USERS.filter(u => u.role === 'CASHIER' || u.role === 'SUPERVISOR');
-  const lines = INITIAL_CHECKOUT_LINES.filter(l => l.id !== undefined);
+  const linesByBranch = getLinesByBranch();
   const products = INITIAL_PRODUCTS.slice(0, 40);
   const list: Transaction[] = [];
   let id = 1000;
@@ -47,7 +57,10 @@ export function getMockTransactions(): Transaction[] {
       }
       const client = INITIAL_CLIENTS[Math.floor(Math.random() * INITIAL_CLIENTS.length)];
       const cashier = cashiers[Math.floor(Math.random() * cashiers.length)];
-      const line = lines[Math.floor(Math.random() * lines.length)];
+      // Repartir por sucursal: elegir una sucursal al azar para que todas tengan ventas
+      const branch = BRANCHES[Math.floor(Math.random() * BRANCHES.length)];
+      const linesInBranch = linesByBranch[branch.id];
+      const line = linesInBranch?.length ? linesInBranch[Math.floor(Math.random() * linesInBranch.length)] : INITIAL_CHECKOUT_LINES[0];
       list.push({
         id: String(id++),
         date: date.toISOString(),
@@ -59,6 +72,7 @@ export function getMockTransactions(): Transaction[] {
         clientName: client.name,
         items,
         lineId: line.id,
+        branchId: line.branchId,
         status: 'COMPLETED',
       });
     }

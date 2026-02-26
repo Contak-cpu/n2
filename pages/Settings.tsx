@@ -12,6 +12,7 @@ const FEATURE_LABELS: Record<keyof FeatureSettings, { label: string; description
   moduloAuditoria: { label: 'Módulo Auditoría', description: 'Registro de auditoría y eventos manuales' },
   moduloCajas: { label: 'Módulo Cajas', description: 'Vista y apertura/cierre de líneas de caja' },
   moduloReportes: { label: 'Módulo Reportes', description: 'Reportes y gráficos de ventas' },
+  moduloDistribucion: { label: 'Módulo Distribución', description: 'Trazabilidad de despachos mayoristas (qué se vendió, a dónde, quién lleva)' },
 };
 
 export const Settings: React.FC = () => {

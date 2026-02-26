@@ -2,10 +2,11 @@ import React, { useState } from 'react';
 import {
   LayoutDashboard, Home, ShoppingCart, Package, DollarSign, Truck,
   Gift, BarChart3, LogOut, User as UserIcon, TrendingDown, ClipboardList,
-  FileText, Users, Settings as SettingsIcon, Menu, X, LayoutGrid
+  FileText, Users, Settings as SettingsIcon, Menu, X, LayoutGrid, PackageCheck
 } from 'lucide-react';
-import { User } from '../types';
+import { User, Branch } from '../types';
 import { getFeatureSettings } from '../utils/featureSettings';
+import { SELECTED_BRANCH_ALL } from '../hooks/useStore';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -13,6 +14,9 @@ interface LayoutProps {
   onTabChange: (tab: any) => void;
   currentUser: User | null;
   onLogout: () => void;
+  branches?: Branch[];
+  selectedBranchId?: string;
+  onSelectedBranchChange?: (branchId: string) => void;
 }
 
 const ROLE_LABELS: Record<string, string> = {
@@ -22,13 +26,23 @@ const ROLE_LABELS: Record<string, string> = {
   REPOSITOR: 'Repositor/a',
 };
 
-export const Layout: React.FC<LayoutProps> = ({ children, activeTab, onTabChange, currentUser, onLogout }) => {
+export const Layout: React.FC<LayoutProps> = ({
+  children,
+  activeTab,
+  onTabChange,
+  currentUser,
+  onLogout,
+  branches = [],
+  selectedBranchId = SELECTED_BRANCH_ALL,
+  onSelectedBranchChange,
+}) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const features = getFeatureSettings();
   const role = currentUser?.role ?? 'CASHIER';
   const isAdmin = role === 'ADMIN';
   const isSupervisor = role === 'SUPERVISOR';
   const isRepositor = role === 'REPOSITOR';
+  const showBranchSelector = (isAdmin || isSupervisor) && branches.length > 0 && onSelectedBranchChange;
 
   const navBtn = (tab: string, label: string, Icon: React.ElementType) => (
     <button
@@ -43,7 +57,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, activeTab, onTabChange
   );
 
   return (
-    <div className="min-h-screen bg-gray-100 flex flex-col md:flex-row">
+    <div className="h-screen max-h-screen bg-gray-100 flex flex-col md:flex-row overflow-hidden">
       {/* Mobile header */}
       <div className="md:hidden flex items-center justify-between p-4 bg-slate-900 text-white border-b border-slate-700">
         <h1 className="text-xl font-bold flex items-center gap-2">
@@ -68,15 +82,31 @@ export const Layout: React.FC<LayoutProps> = ({ children, activeTab, onTabChange
           aria-hidden
         />
       )}
-      <nav className={`bg-slate-900 text-white w-64 flex-shrink-0 flex flex-col justify-between h-screen sticky top-0 z-50
+      <nav className={`bg-slate-900 text-white w-64 flex-shrink-0 flex flex-col h-screen min-h-0 sticky top-0 z-50
         ${mobileMenuOpen ? 'fixed inset-y-0 left-0 w-64' : 'hidden'} md:flex md:relative`}>
-        <div>
+        {/* Solo esta zona hace scroll; el pie (usuario / Cerrar sesión) queda fijo abajo */}
+        <div className="flex-1 min-h-0 overflow-y-auto">
           <div className="p-6 border-b border-slate-700">
             <h1 className="text-2xl font-bold flex items-center gap-2">
               <LayoutDashboard className="text-blue-400" />
               Nueva<span className="text-blue-400">Era</span>
             </h1>
             <p className="text-xs text-slate-400 mt-1">Supermercado</p>
+            {showBranchSelector && (
+              <div className="mt-3">
+                <label className="text-xs text-slate-400 block mb-1">Ver como sucursal</label>
+                <select
+                  value={selectedBranchId}
+                  onChange={(e) => onSelectedBranchChange(e.target.value)}
+                  className="w-full rounded-lg bg-slate-800 border border-slate-600 text-white text-sm px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                >
+                  <option value={SELECTED_BRANCH_ALL}>Todas</option>
+                  {branches.map((b) => (
+                    <option key={b.id} value={b.id}>{b.name}</option>
+                  ))}
+                </select>
+              </div>
+            )}
           </div>
 
           <div className="p-4 space-y-1">
@@ -95,6 +125,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, activeTab, onTabChange
             {/* SUPERVISOR y ADMIN */}
             {(isAdmin || isSupervisor) && navBtn('inventory', 'Inventario', Package)}
             {features.moduloReportes && (isAdmin || isSupervisor) && navBtn('reports', 'Reportes', BarChart3)}
+            {features.moduloDistribucion && (isAdmin || isSupervisor) && navBtn('distribucion', 'Distribución', PackageCheck)}
 
             {/* SOLO ADMIN */}
             {isAdmin && (
@@ -111,8 +142,8 @@ export const Layout: React.FC<LayoutProps> = ({ children, activeTab, onTabChange
           </div>
         </div>
 
-        {/* Footer */}
-        <div className="p-4 border-t border-slate-700 bg-slate-900">
+        {/* Pie fijo: usuario y Cerrar sesión (no tapan el menú) */}
+        <div className="flex-shrink-0 p-4 border-t border-slate-700 bg-slate-900 mt-auto">
           <div className="flex items-center gap-3 mb-4 px-2">
             <div className="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center text-white font-bold">
               {currentUser?.fullName?.charAt(0) ?? 'U'}
@@ -133,7 +164,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, activeTab, onTabChange
       </nav>
 
       {/* Main Content */}
-      <main className="flex-1 overflow-auto h-screen relative min-h-0 pb-[env(safe-area-inset-bottom)]">
+      <main className="flex-1 min-h-0 overflow-auto relative pb-[env(safe-area-inset-bottom)]">
         {children}
       </main>
     </div>

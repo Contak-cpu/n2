@@ -88,7 +88,7 @@ export const Egresos: React.FC<EgresosProps> = ({ egresos, onAdd, onRemove, curr
   };
 
   return (
-    <div className="p-4 sm:p-6 flex flex-col h-full bg-gray-50 overflow-auto">
+    <div className="p-4 sm:p-6 flex flex-col min-h-0 h-full bg-gray-50 overflow-y-auto overflow-x-hidden">
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-3">
@@ -230,7 +230,7 @@ export const Egresos: React.FC<EgresosProps> = ({ egresos, onAdd, onRemove, curr
         </div>
       )}
 
-      {/* Filtros */}
+      {/* Filtros y lista */}
       <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
         <div className="p-4 border-b border-gray-100 flex flex-wrap items-center gap-3">
           <div className="flex items-center gap-2 text-gray-600">
@@ -257,9 +257,9 @@ export const Egresos: React.FC<EgresosProps> = ({ egresos, onAdd, onRemove, curr
           <span className="text-xs text-gray-400 ml-auto">{filtered.length} registro(s)</span>
         </div>
 
-        {/* Tabla */}
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
+        {/* Tabla: scroll vertical y horizontal en el detalle */}
+        <div className="overflow-auto max-h-[50vh] sm:max-h-[60vh]" style={{ WebkitOverflowScrolling: 'touch' } as React.CSSProperties}>
+          <table className="w-full text-sm min-w-[600px]">
             <thead className="bg-gray-50">
               <tr>
                 <th className="text-left py-3 px-4 font-medium text-gray-600">Fecha</th>
