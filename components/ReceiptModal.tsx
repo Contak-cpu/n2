@@ -34,9 +34,9 @@ export const ReceiptModal: React.FC<ReceiptModalProps> = ({ transaction, onClose
                 {/* This structure mirrors the print layout */}
                 <div className="text-center mb-4">
                     <h1 className="text-xl font-bold uppercase">Nueva Era</h1>
-                    <p className="text-xs font-bold uppercase text-gray-500">Mayorista & Distribuidora</p>
+                    <p className="text-xs font-bold uppercase text-gray-500">Supermercado</p>
                     <div className="my-2 h-px bg-gray-300 w-1/2 mx-auto"></div>
-                    <p>Av. Siempre Viva 123</p>
+                    <p>Av. Corrientes 1234</p>
                     <p>IVA Responsable Inscripto</p>
                     <p>CUIT: 30-12345678-9</p>
                 </div>
@@ -69,7 +69,7 @@ export const ReceiptModal: React.FC<ReceiptModalProps> = ({ transaction, onClose
 
                 <div className="mt-6 text-center text-xs">
                     <p>¡Gracias por su compra!</p>
-                    <p>www.mayoristanuevaera.com.ar</p>
+                    <p>www.nuevaera.com.ar</p>
                 </div>
             </div>
         </div>
@@ -86,8 +86,8 @@ export const ReceiptModal: React.FC<ReceiptModalProps> = ({ transaction, onClose
       <div className="print-only hidden">
          <div className="font-mono text-xs leading-tight">
             <div className="text-center mb-2">
-                <h1 className="text-base font-bold uppercase">Mayorista Nueva Era</h1>
-                <p>Av. Siempre Viva 123</p>
+                <h1 className="text-base font-bold uppercase">Supermercado Nueva Era</h1>
+                <p>Av. Corrientes 1234</p>
                 <p>CUIT: 30-12345678-9</p>
             </div>
             
@@ -114,7 +114,7 @@ export const ReceiptModal: React.FC<ReceiptModalProps> = ({ transaction, onClose
 
             <div className="mt-4 text-center">
                 <p>¡Gracias por su compra!</p>
-                <p>www.mayoristanuevaera.com.ar</p>
+                <p>www.nuevaera.com.ar</p>
             </div>
         </div>
       </div>

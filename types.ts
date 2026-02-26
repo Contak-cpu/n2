@@ -1,14 +1,18 @@
 export interface Product {
   id: string;
   sku: string;
+  barcode: string;
   name: string;
   category: string;
+  subcategory?: string;
   cost: number;
-  priceWholesale: number;
-  priceRetail: number;
-  stock: number;
-  imageUrl?: string;
-  supplierId?: string;
+  price: number;
+  imageUrl: string;
+  supplier?: string;
+  stockDepot: number;
+  stockGondola: number;
+  lastRestocked?: Date;
+  lastRestockedBy?: string;
 }
 
 export interface CartItem extends Product {
@@ -28,6 +32,8 @@ export enum TransactionType {
   EXPENSE = 'Egreso'
 }
 
+export type TransactionStatus = 'COMPLETED' | 'CANCELLED' | 'REFUNDED';
+
 export interface Transaction {
   id: string;
   date: string;
@@ -37,7 +43,12 @@ export interface Transaction {
   method: PaymentMethod | 'Manual';
   cashierName?: string;
   clientName?: string;
-  items?: CartItem[]; // For re-printing receipts
+  items?: CartItem[];
+  lineId?: string;
+  tax?: number;
+  discount?: number;
+  status?: TransactionStatus;
+  paymentReference?: string;
 }
 
 export type PricingMode = 'RETAIL' | 'WHOLESALE';
@@ -56,9 +67,13 @@ export type UserRole = 'ADMIN' | 'CASHIER' | 'SUPERVISOR' | 'REPOSITOR';
 export interface User {
   id: string;
   username: string;
-  password?: string; // In a real app, this is hashed. Here simple string for PoC.
+  password?: string;
   fullName: string;
   role: UserRole;
+  email?: string;
+  phone?: string;
+  active: boolean;
+  lastLogin?: Date;
 }
 
 export interface Supplier {

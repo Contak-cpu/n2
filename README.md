@@ -1,20 +1,40 @@
-<div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
-</div>
+# Nueva Era ERP - Sistema de Gestión para Supermercados
 
-# Run and deploy your AI Studio app
+Sistema de gestión integral para supermercados: POS multi-caja, inventario (depósito/góndola), reposición con escaneo, reportes, promociones y finanzas.
 
-This contains everything you need to run your app locally.
+## Ejecutar en local
 
-View your app in AI Studio: https://ai.studio/apps/drive/14Qg7PkGbI2DeZ0dyDWZyGMBZ98c96Xgc
+**Requisitos:** Node.js 18+
 
-## Run Locally
+1. **Entrar en la carpeta del proyecto** (donde está `package.json`). Si clonaste o descomprimiste el repo, la ruta es la carpeta **interna** donde está `package.json`, por ejemplo:
+   ```bash
+   cd nuevaera-main/nuevaera-main
+   ```
+   O desde la ruta completa (Windows):
+   ```bash
+   cd C:\Users\pictoN\Downloads\nuevaera-main\nuevaera-main
+   ```
+2. Instalar dependencias:
+   ```bash
+   npm install
+   ```
+3. Levantar el servidor de desarrollo:
+   ```bash
+   npm run dev
+   ```
+4. Abrir en el navegador la URL que indique Vite (por defecto `http://localhost:3000`).
 
-**Prerequisites:**  Node.js
+**Importante:** Ejecutá `npm run dev` siempre desde la carpeta que contiene `package.json`. Si lo ejecutás desde la raíz del workspace (donde no hay `package.json`), npm podría usar otro proyecto y verías una app distinta.
 
+## Build
 
-1. Install dependencies:
-   `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
-   `npm run dev`
+```bash
+npm run build
+```
+
+## Credenciales de demo
+
+- **Admin:** `admin` / `123`
+- **Supervisor:** `supervisor` / `123`
+- **Cajeros:** `caja1`–`caja4` / `123`
+- **Repositores:** `repo1`, `repo2` / `123`

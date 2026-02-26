@@ -1,5 +1,5 @@
 {
   "name": "Nueva Era ERP",
-  "description": "Sistema de gestión integral para supermercados mayoristas con POS, inventario y finanzas.",
+  "description": "Sistema de gestión integral para supermercados: POS multi-caja, inventario (depósito/góndola), reposición con escaneo, reportes y finanzas.",
   "requestFramePermissions": []
 }

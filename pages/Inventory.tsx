@@ -17,7 +17,8 @@ export const Inventory: React.FC<InventoryProps> = ({ products, onAddProduct, on
 
   const filteredProducts = products.filter(p => 
     p.name.toLowerCase().includes(search.toLowerCase()) || 
-    p.sku.toLowerCase().includes(search.toLowerCase())
+    p.sku.toLowerCase().includes(search.toLowerCase()) ||
+    (p.barcode && p.barcode.includes(search))
   );
 
   const handleSave = (e: React.FormEvent) => {
@@ -39,13 +40,14 @@ export const Inventory: React.FC<InventoryProps> = ({ products, onAddProduct, on
   const openNewProduct = () => {
     setEditingProduct({
       sku: '',
+      barcode: '',
       name: '',
       category: 'General',
       cost: 0,
-      priceWholesale: 0,
-      priceRetail: 0,
-      stock: 0,
-      imageUrl: ''
+      price: 0,
+      imageUrl: '',
+      stockDepot: 0,
+      stockGondola: 0,
     });
     setIsModalOpen(true);
   };
@@ -104,9 +106,9 @@ export const Inventory: React.FC<InventoryProps> = ({ products, onAddProduct, on
                 <th className="px-6 py-4">SKU</th>
                 <th className="px-6 py-4">Producto</th>
                 <th className="px-6 py-4">Costo</th>
-                <th className="px-6 py-4">P. Mayorista</th>
-                <th className="px-6 py-4">P. Minorista</th>
-                <th className="px-6 py-4">Stock</th>
+                <th className="px-6 py-4">Precio</th>
+                <th className="px-6 py-4">Depósito</th>
+                <th className="px-6 py-4">Góndola</th>
                 <th className="px-6 py-4 text-right">Acciones</th>
               </tr>
             </thead>
@@ -130,16 +132,16 @@ export const Inventory: React.FC<InventoryProps> = ({ products, onAddProduct, on
                     </div>
                   </td>
                   <td className="px-6 py-4 text-gray-500">${product.cost}</td>
-                  <td className="px-6 py-4 text-purple-700 font-medium">${product.priceWholesale}</td>
-                  <td className="px-6 py-4 text-blue-700 font-medium">${product.priceRetail}</td>
+                  <td className="px-6 py-4 text-blue-700 font-medium">${product.price}</td>
+                  <td className="px-6 py-4 text-gray-600">{product.stockDepot}</td>
                   <td className="px-6 py-4">
                     <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold ${
-                      product.stock < LOW_STOCK_THRESHOLD 
+                      product.stockGondola < LOW_STOCK_THRESHOLD 
                         ? 'bg-red-100 text-red-700' 
                         : 'bg-green-100 text-green-700'
                     }`}>
-                      {product.stock < LOW_STOCK_THRESHOLD && <AlertTriangle size={12} />}
-                      {product.stock} un.
+                      {product.stockGondola < LOW_STOCK_THRESHOLD && <AlertTriangle size={12} />}
+                      {product.stockGondola} un.
                     </span>
                   </td>
                   <td className="px-6 py-4 text-right">
@@ -219,11 +221,19 @@ export const Inventory: React.FC<InventoryProps> = ({ products, onAddProduct, on
                   <input 
                     required 
                     className="w-full border rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
-                    value={editingProduct.sku}
+                    value={editingProduct.sku || ''}
                     onChange={e => setEditingProduct({...editingProduct, sku: e.target.value})}
                   />
                 </div>
                 <div>
+                  <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Código de barras</label>
+                  <input 
+                    className="w-full border rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+                    value={editingProduct.barcode || ''}
+                    onChange={e => setEditingProduct({...editingProduct, barcode: e.target.value})}
+                  />
+                </div>
+                <div className="col-span-2">
                   <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Categoría</label>
                   <input 
                     required 
@@ -258,38 +268,47 @@ export const Inventory: React.FC<InventoryProps> = ({ products, onAddProduct, on
                   </div>
                 </div>
                  <div>
-                  <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Stock</label>
+                  <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Stock Depósito</label>
                   <input 
                     type="number" required min="0"
                     className="w-full border rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
-                    value={editingProduct.stock}
-                    onChange={e => setEditingProduct({...editingProduct, stock: Number(e.target.value)})}
+                    value={editingProduct.stockDepot ?? 0}
+                    onChange={e => setEditingProduct({...editingProduct, stockDepot: Number(e.target.value)})}
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Stock Góndola</label>
+                  <input 
+                    type="number" required min="0"
+                    className="w-full border rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+                    value={editingProduct.stockGondola ?? 0}
+                    onChange={e => setEditingProduct({...editingProduct, stockGondola: Number(e.target.value)})}
                   />
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-4 p-4 bg-gray-50 rounded-lg border border-gray-100">
                 <div>
-                  <label className="block text-xs font-bold text-blue-700 uppercase mb-1">Precio Minorista</label>
+                  <label className="block text-xs font-bold text-blue-700 uppercase mb-1">Precio de venta</label>
                   <div className="relative">
                     <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">$</span>
                     <input 
                       type="number" required min="0"
                       className="w-full border border-blue-200 rounded-lg pl-7 p-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
-                      value={editingProduct.priceRetail}
-                      onChange={e => setEditingProduct({...editingProduct, priceRetail: Number(e.target.value)})}
+                      value={editingProduct.price ?? 0}
+                      onChange={e => setEditingProduct({...editingProduct, price: Number(e.target.value)})}
                     />
                   </div>
                 </div>
-                <div>
-                  <label className="block text-xs font-bold text-purple-700 uppercase mb-1">Precio Mayorista</label>
+                <div className="hidden">
+                  <label className="block text-xs font-bold text-purple-700 uppercase mb-1">Precio 2</label>
                   <div className="relative">
                     <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">$</span>
                     <input 
                       type="number" required min="0"
                       className="w-full border border-purple-200 rounded-lg pl-7 p-2.5 text-sm focus:ring-2 focus:ring-purple-500 outline-none"
-                      value={editingProduct.priceWholesale}
-                      onChange={e => setEditingProduct({...editingProduct, priceWholesale: Number(e.target.value)})}
+                      value={editingProduct.price ?? 0}
+                      onChange={e => setEditingProduct({...editingProduct, price: Number(e.target.value)})}
                     />
                   </div>
                 </div>

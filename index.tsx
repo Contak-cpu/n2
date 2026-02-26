@@ -4,9 +4,9 @@ import App from './App';
 
 // Clear old cached data when version changes
 const cacheVersion = localStorage.getItem('app_version');
-if (cacheVersion !== 'v3-roles') {
+if (cacheVersion !== 'v4-supermarket') {
   localStorage.clear();
-  localStorage.setItem('app_version', 'v3-roles');
+  localStorage.setItem('app_version', 'v4-supermarket');
 }
 
 const rootElement = document.getElementById('root');

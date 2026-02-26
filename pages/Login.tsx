@@ -21,7 +21,7 @@ export const Login: React.FC<LoginProps> = ({ onLogin }) => {
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden">
         <div className="bg-blue-600 p-8 text-center">
           <h1 className="text-3xl font-bold text-white mb-2">Nueva Era</h1>
-          <p className="text-blue-100">Sistema de Gestión ERP</p>
+          <p className="text-blue-100">Sistema de Gestión - Supermercado</p>
         </div>
         
         <form onSubmit={handleSubmit} className="p-8 space-y-6">

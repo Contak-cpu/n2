@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
-import { Product, Transaction, TransactionType, User, Supplier, Client, CheckoutLine, Promotion, Egreso } from '../types';
+import { Product, Transaction, TransactionType, User, Supplier, Client, CheckoutLine, Promotion, Egreso, Restocking, AuditLog } from '../types';
 import { INITIAL_PRODUCTS, INITIAL_USERS, INITIAL_SUPPLIERS, INITIAL_CLIENTS, INITIAL_CHECKOUT_LINES, INITIAL_PROMOTIONS } from '../constants';
+import { getMockTransactions, getMockRestocking } from '../utils/mockData';
 
 export const useStore = () => {
   // --- AUTH STATE ---
@@ -17,7 +18,8 @@ export const useStore = () => {
 
   const [transactions, setTransactions] = useState<Transaction[]>(() => {
     const saved = localStorage.getItem('erp_transactions');
-    return saved ? JSON.parse(saved) : [];
+    if (saved && saved !== '[]') return JSON.parse(saved);
+    return getMockTransactions();
   });
 
   const [suppliers, setSuppliers] = useState<Supplier[]>(() => {
@@ -45,6 +47,17 @@ export const useStore = () => {
     return saved ? JSON.parse(saved) : [];
   });
 
+  const [restocking, setRestocking] = useState<Restocking[]>(() => {
+    const saved = localStorage.getItem('erp_restocking');
+    if (saved && saved !== '[]') return JSON.parse(saved);
+    return getMockRestocking();
+  });
+
+  const [auditLogs, setAuditLogs] = useState<AuditLog[]>(() => {
+    const saved = localStorage.getItem('erp_audit_logs');
+    return saved ? JSON.parse(saved) : [];
+  });
+
   // --- PERSISTENCE ---
   useEffect(() => {
     if (currentUser) {
@@ -61,6 +74,8 @@ export const useStore = () => {
   useEffect(() => { localStorage.setItem('erp_checkout_lines', JSON.stringify(checkoutLines)); }, [checkoutLines]);
   useEffect(() => { localStorage.setItem('erp_promotions', JSON.stringify(promotions)); }, [promotions]);
   useEffect(() => { localStorage.setItem('erp_egresos', JSON.stringify(egresos)); }, [egresos]);
+  useEffect(() => { localStorage.setItem('erp_restocking', JSON.stringify(restocking)); }, [restocking]);
+  useEffect(() => { localStorage.setItem('erp_audit_logs', JSON.stringify(auditLogs)); }, [auditLogs]);
 
   // --- ACTIONS ---
 
@@ -85,14 +100,45 @@ export const useStore = () => {
     setProducts(prev => prev.map(p => p.id === updatedProduct.id ? updatedProduct : p));
   };
 
+  /** Descuenta de stock en góndola (venta). */
   const updateStock = (items: { id: string; quantity: number }[]) => {
     setProducts(prev => prev.map(p => {
       const item = items.find(i => i.id === p.id);
       if (item) {
-        return { ...p, stock: Math.max(0, p.stock - item.quantity) };
+        const newGondola = Math.max(0, p.stockGondola - item.quantity);
+        return { ...p, stockGondola: newGondola };
       }
       return p;
     }));
+  };
+
+  /** Mueve cantidad de depósito a góndola y registra la reposición. */
+  const restockFromDepot = (productId: string, quantity: number, repostorId: string, repostorName?: string) => {
+    setProducts(prev => prev.map(p => {
+      if (p.id !== productId) return p;
+      const move = Math.min(quantity, p.stockDepot);
+      return {
+        ...p,
+        stockDepot: p.stockDepot - move,
+        stockGondola: p.stockGondola + move,
+        lastRestocked: new Date(),
+        lastRestockedBy: repostorName ?? repostorId,
+      };
+    }));
+    const entry: Restocking = {
+      id: Date.now().toString(),
+      productId,
+      quantity,
+      from: 'DEPOT',
+      to: 'GONDOLA',
+      repostorId,
+      timestamp: new Date(),
+    };
+    setRestocking(prev => [entry, ...prev]);
+  };
+
+  const addAuditLog = (entry: Omit<AuditLog, 'id' | 'timestamp'>) => {
+    setAuditLogs(prev => [{ ...entry, id: Date.now().toString(), timestamp: new Date() }, ...prev]);
   };
 
   const addTransaction = (transaction: Transaction) => {
@@ -158,11 +204,15 @@ export const useStore = () => {
     checkoutLines,
     promotions,
     egresos,
+    restocking,
+    auditLogs,
     login,
     logout,
     addProduct,
     updateProduct,
     updateStock,
+    restockFromDepot,
+    addAuditLog,
     addTransaction,
     addSupplier,
     removeSupplier,

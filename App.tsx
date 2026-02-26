@@ -8,7 +8,12 @@ import { Suppliers } from './pages/Suppliers';
 import { Promotions } from './pages/Promotions';
 import { Reports } from './pages/Reports';
 import { Egresos } from './pages/Egresos';
+import { Repositor } from './pages/Repositor';
+import { AuditLog } from './pages/AuditLog';
+import { Users } from './pages/Users';
+import { Settings } from './pages/Settings';
 import { useStore } from './hooks/useStore';
+import { INITIAL_USERS } from './constants';
 import { TransactionType, CartItem, Client, Transaction } from './types';
 
 const DEFAULT_TAB_BY_ROLE: Record<string, string> = {
@@ -32,7 +37,13 @@ const App: React.FC = () => {
   const isAdmin = role === 'ADMIN';
   const isSupervisor = role === 'SUPERVISOR';
 
-  const handleCheckout = (cart: CartItem[], total: number, method: any, client: Client): Transaction => {
+  const handleCheckout = (
+    lineId: string | undefined,
+    cart: CartItem[],
+    total: number,
+    method: any,
+    client: Client
+  ): Transaction => {
     const newTransaction: Transaction = {
       id: Date.now().toString(),
       date: new Date().toISOString(),
@@ -40,18 +51,29 @@ const App: React.FC = () => {
       amount: total,
       description: `Venta POS - ${client.name}`,
       method: method,
-      cashierName: store.currentUser?.username,
+      cashierName: store.currentUser?.username ?? store.currentUser?.fullName,
       clientName: client.name,
       items: cart,
+      lineId,
+      status: 'COMPLETED',
     };
     store.addTransaction(newTransaction);
     store.updateStock(cart.map(item => ({ id: item.id, quantity: item.quantity })));
+    if (lineId) {
+      const line = store.checkoutLines.find(l => l.id === lineId);
+      if (line) {
+        store.updateCheckoutLine(lineId, {
+          totalSales: line.totalSales + total,
+          transactionCount: line.transactionCount + 1,
+        });
+      }
+    }
     return newTransaction;
   };
 
   const handleTabChange = (tab: string) => {
     // Validar que el rol tenga acceso a esa pestaña
-    const adminOnly = ['finance', 'egresos', 'suppliers', 'promotions'];
+    const adminOnly = ['finance', 'egresos', 'suppliers', 'promotions', 'audit', 'users', 'settings'];
     const supervisorAllowed = ['pos', 'inventory', 'reports'];
     const cashierAllowed = ['pos'];
     const repositorAllowed = ['repositor'];
@@ -74,7 +96,14 @@ const App: React.FC = () => {
         <POS
           products={store.products}
           clients={store.clients}
+          checkoutLines={store.checkoutLines}
+          users={INITIAL_USERS}
+          currentUser={store.currentUser}
+          transactions={store.transactions}
+          activePromotions={store.getActivePromotions()}
           onCheckout={handleCheckout}
+          openCheckoutLine={store.openCheckoutLine}
+          closeCheckoutLine={store.closeCheckoutLine}
         />
       )}
 
@@ -132,6 +161,27 @@ const App: React.FC = () => {
           currentBalance={store.getBalance()}
         />
       )}
+
+      {/* REPOSITOR - solo Repositor (y Admin para pruebas) */}
+      {activeTab === 'repositor' && (role === 'REPOSITOR' || isAdmin) && (
+        <Repositor
+          products={store.products}
+          currentUser={store.currentUser}
+          restocking={store.restocking}
+          onRestockFromDepot={store.restockFromDepot}
+        />
+      )}
+
+      {/* AUDITORÍA - solo Admin */}
+      {activeTab === 'audit' && isAdmin && (
+        <AuditLog auditLogs={store.auditLogs} users={INITIAL_USERS.map(u => ({ id: u.id, fullName: u.fullName }))} />
+      )}
+
+      {/* USUARIOS - solo Admin */}
+      {activeTab === 'users' && isAdmin && <Users users={INITIAL_USERS} />}
+
+      {/* CONFIGURACIÓN - solo Admin */}
+      {activeTab === 'settings' && isAdmin && <Settings />}
     </Layout>
   );
 };

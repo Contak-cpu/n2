@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   LayoutDashboard, ShoppingCart, Package, DollarSign, Truck,
-  Gift, BarChart3, LogOut, User as UserIcon, TrendingDown, ClipboardList
+  Gift, BarChart3, LogOut, User as UserIcon, TrendingDown, ClipboardList,
+  FileText, Users, Settings as SettingsIcon, Menu, X
 } from 'lucide-react';
 import { User } from '../types';
 
@@ -21,6 +22,7 @@ const ROLE_LABELS: Record<string, string> = {
 };
 
 export const Layout: React.FC<LayoutProps> = ({ children, activeTab, onTabChange, currentUser, onLogout }) => {
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const role = currentUser?.role ?? 'CASHIER';
   const isAdmin = role === 'ADMIN';
   const isSupervisor = role === 'SUPERVISOR';
@@ -28,7 +30,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, activeTab, onTabChange
 
   const navBtn = (tab: string, label: string, Icon: React.ElementType) => (
     <button
-      onClick={() => onTabChange(tab)}
+      onClick={() => { onTabChange(tab); setMobileMenuOpen(false); }}
       className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors text-left ${
         activeTab === tab ? 'bg-blue-600 text-white shadow-lg' : 'text-slate-300 hover:bg-slate-800'
       }`}
@@ -40,15 +42,39 @@ export const Layout: React.FC<LayoutProps> = ({ children, activeTab, onTabChange
 
   return (
     <div className="min-h-screen bg-gray-100 flex flex-col md:flex-row">
-      {/* Sidebar */}
-      <nav className="bg-slate-900 text-white w-full md:w-64 flex-shrink-0 flex flex-col justify-between h-screen sticky top-0">
+      {/* Mobile header */}
+      <div className="md:hidden flex items-center justify-between p-4 bg-slate-900 text-white border-b border-slate-700">
+        <h1 className="text-xl font-bold flex items-center gap-2">
+          <LayoutDashboard className="text-blue-400" />
+          Nueva<span className="text-blue-400">Era</span>
+        </h1>
+        <button
+          type="button"
+          onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+          className="p-2 rounded-lg hover:bg-slate-800 transition-colors"
+          aria-label={mobileMenuOpen ? 'Cerrar menú' : 'Abrir menú'}
+        >
+          {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+        </button>
+      </div>
+
+      {/* Sidebar: overlay on mobile when open, fixed on md+ */}
+      {mobileMenuOpen && (
+        <div
+          className="fixed inset-0 bg-black/50 z-40 md:hidden"
+          onClick={() => setMobileMenuOpen(false)}
+          aria-hidden
+        />
+      )}
+      <nav className={`bg-slate-900 text-white w-64 flex-shrink-0 flex flex-col justify-between h-screen sticky top-0 z-50
+        ${mobileMenuOpen ? 'fixed inset-y-0 left-0 w-64' : 'hidden'} md:flex md:relative`}>
         <div>
           <div className="p-6 border-b border-slate-700">
             <h1 className="text-2xl font-bold flex items-center gap-2">
               <LayoutDashboard className="text-blue-400" />
               Nueva<span className="text-blue-400">Era</span>
             </h1>
-            <p className="text-xs text-slate-400 mt-1">Sistema de Gestión</p>
+            <p className="text-xs text-slate-400 mt-1">Supermercado</p>
           </div>
 
           <div className="p-4 space-y-1">
@@ -69,6 +95,9 @@ export const Layout: React.FC<LayoutProps> = ({ children, activeTab, onTabChange
                 {navBtn('egresos', 'Egresos', TrendingDown)}
                 {navBtn('suppliers', 'Proveedores', Truck)}
                 {navBtn('promotions', 'Promociones', Gift)}
+                {navBtn('audit', 'Auditoría', FileText)}
+                {navBtn('users', 'Usuarios', Users)}
+                {navBtn('settings', 'Configuración', SettingsIcon)}
               </>
             )}
           </div>
