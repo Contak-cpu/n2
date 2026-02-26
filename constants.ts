@@ -112,12 +112,14 @@ export const LOW_STOCK_THRESHOLD = 10;
 
 // ========== USUARIOS ==========
 export const INITIAL_USERS: User[] = [
-  { id: '1', username: 'admin', password: '123', fullName: 'Gerente General', role: 'ADMIN' },
-  { id: '2', username: 'caja1', password: '123', fullName: 'Cajero Mañana', role: 'CASHIER' },
-  { id: '3', username: 'caja2', password: '123', fullName: 'Cajero Tarde', role: 'CASHIER' },
-  { id: '4', username: 'caja3', password: '123', fullName: 'Cajero Noche', role: 'CASHIER' },
-  { id: '5', username: 'repo1', password: '123', fullName: 'Repositor 1', role: 'CASHIER' },
-  { id: '6', username: 'repo2', password: '123', fullName: 'Repositor 2', role: 'CASHIER' },
+  { id: '1', username: 'admin',      password: '123', fullName: 'Gerente General',   role: 'ADMIN'      },
+  { id: '2', username: 'supervisor', password: '123', fullName: 'Jefa de Turno',      role: 'SUPERVISOR' },
+  { id: '3', username: 'caja1',      password: '123', fullName: 'María González',     role: 'CASHIER'    },
+  { id: '4', username: 'caja2',      password: '123', fullName: 'Carlos Fernández',   role: 'CASHIER'    },
+  { id: '5', username: 'caja3',      password: '123', fullName: 'Ana Rodríguez',      role: 'CASHIER'    },
+  { id: '6', username: 'caja4',      password: '123', fullName: 'Lucía Martínez',     role: 'CASHIER'    },
+  { id: '7', username: 'repo1',      password: '123', fullName: 'Diego López',        role: 'REPOSITOR'  },
+  { id: '8', username: 'repo2',      password: '123', fullName: 'Sofía Pérez',        role: 'REPOSITOR'  },
 ];
 
 // ========== PROVEEDORES ==========

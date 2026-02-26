@@ -7,20 +7,32 @@ import { Login } from './pages/Login';
 import { Suppliers } from './pages/Suppliers';
 import { Promotions } from './pages/Promotions';
 import { Reports } from './pages/Reports';
+import { Egresos } from './pages/Egresos';
 import { useStore } from './hooks/useStore';
 import { TransactionType, CartItem, Client, Transaction } from './types';
 
-const App: React.FC = () => {
-  const [activeTab, setActiveTab] = useState('pos');
-  const store = useStore();
+const DEFAULT_TAB_BY_ROLE: Record<string, string> = {
+  ADMIN: 'pos',
+  SUPERVISOR: 'pos',
+  CASHIER: 'pos',
+  REPOSITOR: 'repositor',
+};
 
-  // Guard: If not logged in, show login
+const App: React.FC = () => {
+  const store = useStore();
+  const [activeTab, setActiveTab] = useState(() => {
+    return DEFAULT_TAB_BY_ROLE[store.currentUser?.role ?? 'CASHIER'] ?? 'pos';
+  });
+
   if (!store.currentUser) {
     return <Login onLogin={store.login} />;
   }
 
+  const role = store.currentUser.role;
+  const isAdmin = role === 'ADMIN';
+  const isSupervisor = role === 'SUPERVISOR';
+
   const handleCheckout = (cart: CartItem[], total: number, method: any, client: Client): Transaction => {
-    // 1. Create Transaction Object
     const newTransaction: Transaction = {
       id: Date.now().toString(),
       date: new Date().toISOString(),
@@ -30,50 +42,72 @@ const App: React.FC = () => {
       method: method,
       cashierName: store.currentUser?.username,
       clientName: client.name,
-      items: cart
+      items: cart,
     };
-
-    // 2. Save to Store
     store.addTransaction(newTransaction);
-
-    // 3. Update Stock
     store.updateStock(cart.map(item => ({ id: item.id, quantity: item.quantity })));
-    
     return newTransaction;
   };
 
+  const handleTabChange = (tab: string) => {
+    // Validar que el rol tenga acceso a esa pestaña
+    const adminOnly = ['finance', 'egresos', 'suppliers', 'promotions'];
+    const supervisorAllowed = ['pos', 'inventory', 'reports'];
+    const cashierAllowed = ['pos'];
+    const repositorAllowed = ['repositor'];
+
+    if (isAdmin) { setActiveTab(tab); return; }
+    if (isSupervisor && supervisorAllowed.includes(tab)) { setActiveTab(tab); return; }
+    if (role === 'CASHIER' && cashierAllowed.includes(tab)) { setActiveTab(tab); return; }
+    if (role === 'REPOSITOR' && repositorAllowed.includes(tab)) { setActiveTab(tab); return; }
+  };
+
   return (
-    <Layout 
-      activeTab={activeTab} 
-      onTabChange={setActiveTab} 
+    <Layout
+      activeTab={activeTab}
+      onTabChange={handleTabChange}
       currentUser={store.currentUser}
       onLogout={store.logout}
     >
-      {activeTab === 'pos' && (
-        <POS 
-          products={store.products} 
+      {/* POS - accesible para Admin, Supervisor, Cajero */}
+      {activeTab === 'pos' && role !== 'REPOSITOR' && (
+        <POS
+          products={store.products}
           clients={store.clients}
-          onCheckout={handleCheckout} 
+          onCheckout={handleCheckout}
         />
       )}
-      
-      {activeTab === 'inventory' && store.currentUser.role === 'ADMIN' && (
-        <Inventory 
-          products={store.products} 
+
+      {/* INVENTARIO - Admin y Supervisor */}
+      {activeTab === 'inventory' && (isAdmin || isSupervisor) && (
+        <Inventory
+          products={store.products}
           onAddProduct={store.addProduct}
           onUpdateProduct={store.updateProduct}
         />
       )}
-      
-      {activeTab === 'finance' && store.currentUser.role === 'ADMIN' && (
-        <Finance 
-          transactions={store.transactions} 
+
+      {/* CAJA Y FINANZAS - solo Admin */}
+      {activeTab === 'finance' && isAdmin && (
+        <Finance
+          transactions={store.transactions}
           currentBalance={store.getBalance()}
           onAddTransaction={store.addTransaction}
         />
       )}
 
-      {activeTab === 'suppliers' && store.currentUser.role === 'ADMIN' && (
+      {/* EGRESOS - solo Admin */}
+      {activeTab === 'egresos' && isAdmin && (
+        <Egresos
+          egresos={store.egresos}
+          onAdd={store.addEgreso}
+          onRemove={store.removeEgreso}
+          currentUser={store.currentUser.username}
+        />
+      )}
+
+      {/* PROVEEDORES - solo Admin */}
+      {activeTab === 'suppliers' && isAdmin && (
         <Suppliers
           suppliers={store.suppliers}
           onAdd={store.addSupplier}
@@ -81,7 +115,8 @@ const App: React.FC = () => {
         />
       )}
 
-      {activeTab === 'promotions' && store.currentUser.role === 'ADMIN' && (
+      {/* PROMOCIONES - solo Admin */}
+      {activeTab === 'promotions' && isAdmin && (
         <Promotions
           promotions={store.promotions}
           onAdd={store.addPromotion}
@@ -89,7 +124,8 @@ const App: React.FC = () => {
         />
       )}
 
-      {activeTab === 'reports' && store.currentUser.role === 'ADMIN' && (
+      {/* REPORTES - Admin y Supervisor */}
+      {activeTab === 'reports' && (isAdmin || isSupervisor) && (
         <Reports
           transactions={store.transactions}
           products={store.products}

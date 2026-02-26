@@ -1,5 +1,8 @@
 import React from 'react';
-import { LayoutDashboard, ShoppingCart, Package, DollarSign, Truck, Gift, BarChart3, LogOut, User as UserIcon } from 'lucide-react';
+import {
+  LayoutDashboard, ShoppingCart, Package, DollarSign, Truck,
+  Gift, BarChart3, LogOut, User as UserIcon, TrendingDown, ClipboardList
+} from 'lucide-react';
 import { User } from '../types';
 
 interface LayoutProps {
@@ -10,12 +13,34 @@ interface LayoutProps {
   onLogout: () => void;
 }
 
+const ROLE_LABELS: Record<string, string> = {
+  ADMIN: 'Administrador',
+  SUPERVISOR: 'Supervisor',
+  CASHIER: 'Cajero/a',
+  REPOSITOR: 'Repositor/a',
+};
+
 export const Layout: React.FC<LayoutProps> = ({ children, activeTab, onTabChange, currentUser, onLogout }) => {
-  const isAdmin = currentUser?.role === 'ADMIN';
+  const role = currentUser?.role ?? 'CASHIER';
+  const isAdmin = role === 'ADMIN';
+  const isSupervisor = role === 'SUPERVISOR';
+  const isRepositor = role === 'REPOSITOR';
+
+  const navBtn = (tab: string, label: string, Icon: React.ElementType) => (
+    <button
+      onClick={() => onTabChange(tab)}
+      className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors text-left ${
+        activeTab === tab ? 'bg-blue-600 text-white shadow-lg' : 'text-slate-300 hover:bg-slate-800'
+      }`}
+    >
+      <Icon size={20} />
+      <span className="font-medium">{label}</span>
+    </button>
+  );
 
   return (
     <div className="min-h-screen bg-gray-100 flex flex-col md:flex-row">
-      {/* Sidebar Navigation */}
+      {/* Sidebar */}
       <nav className="bg-slate-900 text-white w-full md:w-64 flex-shrink-0 flex flex-col justify-between h-screen sticky top-0">
         <div>
           <div className="p-6 border-b border-slate-700">
@@ -23,87 +48,44 @@ export const Layout: React.FC<LayoutProps> = ({ children, activeTab, onTabChange
               <LayoutDashboard className="text-blue-400" />
               Nueva<span className="text-blue-400">Era</span>
             </h1>
-            <p className="text-xs text-slate-400 mt-1">Mayorista & Distribuidora</p>
+            <p className="text-xs text-slate-400 mt-1">Sistema de Gestión</p>
           </div>
-          <div className="p-4 space-y-2">
-            <button
-              onClick={() => onTabChange('pos')}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
-                activeTab === 'pos' ? 'bg-blue-600 text-white shadow-lg' : 'text-slate-300 hover:bg-slate-800'
-              }`}
-            >
-              <ShoppingCart size={20} />
-              <span className="font-medium">Punto de Venta</span>
-            </button>
-            
+
+          <div className="p-4 space-y-1">
+            {/* CAJERO: solo POS */}
+            {(isAdmin || isSupervisor || role === 'CASHIER') && navBtn('pos', 'Punto de Venta', ShoppingCart)}
+
+            {/* REPOSITOR: solo su módulo */}
+            {isRepositor && navBtn('repositor', 'Reposición de Stock', ClipboardList)}
+
+            {/* SUPERVISOR y ADMIN */}
+            {(isAdmin || isSupervisor) && navBtn('inventory', 'Inventario', Package)}
+            {(isAdmin || isSupervisor) && navBtn('reports', 'Reportes', BarChart3)}
+
+            {/* SOLO ADMIN */}
             {isAdmin && (
               <>
-                <button
-                  onClick={() => onTabChange('inventory')}
-                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
-                    activeTab === 'inventory' ? 'bg-blue-600 text-white shadow-lg' : 'text-slate-300 hover:bg-slate-800'
-                  }`}
-                >
-                  <Package size={20} />
-                  <span className="font-medium">Inventario</span>
-                </button>
-                
-                <button
-                  onClick={() => onTabChange('finance')}
-                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
-                    activeTab === 'finance' ? 'bg-blue-600 text-white shadow-lg' : 'text-slate-300 hover:bg-slate-800'
-                  }`}
-                >
-                  <DollarSign size={20} />
-                  <span className="font-medium">Caja y Finanzas</span>
-                </button>
-
-                <button
-                  onClick={() => onTabChange('suppliers')}
-                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
-                    activeTab === 'suppliers' ? 'bg-blue-600 text-white shadow-lg' : 'text-slate-300 hover:bg-slate-800'
-                  }`}
-                >
-                  <Truck size={20} />
-                  <span className="font-medium">Proveedores</span>
-                </button>
-
-                <button
-                  onClick={() => onTabChange('promotions')}
-                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
-                    activeTab === 'promotions' ? 'bg-blue-600 text-white shadow-lg' : 'text-slate-300 hover:bg-slate-800'
-                  }`}
-                >
-                  <Gift size={20} />
-                  <span className="font-medium">Promociones</span>
-                </button>
-
-                <button
-                  onClick={() => onTabChange('reports')}
-                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
-                    activeTab === 'reports' ? 'bg-blue-600 text-white shadow-lg' : 'text-slate-300 hover:bg-slate-800'
-                  }`}
-                >
-                  <BarChart3 size={20} />
-                  <span className="font-medium">Reportes</span>
-                </button>
+                {navBtn('finance', 'Caja y Finanzas', DollarSign)}
+                {navBtn('egresos', 'Egresos', TrendingDown)}
+                {navBtn('suppliers', 'Proveedores', Truck)}
+                {navBtn('promotions', 'Promociones', Gift)}
               </>
             )}
           </div>
         </div>
 
-        {/* User Profile Footer */}
+        {/* Footer */}
         <div className="p-4 border-t border-slate-700 bg-slate-900">
           <div className="flex items-center gap-3 mb-4 px-2">
-            <div className="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center">
-              <UserIcon size={20} />
+            <div className="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center text-white font-bold">
+              {currentUser?.fullName?.charAt(0) ?? 'U'}
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-sm font-bold text-white truncate">{currentUser?.fullName}</p>
-              <p className="text-xs text-slate-400 truncate">{currentUser?.role === 'ADMIN' ? 'Administrador' : 'Cajero'}</p>
+              <p className="text-xs text-slate-400 truncate">{ROLE_LABELS[role] ?? role}</p>
             </div>
           </div>
-          <button 
+          <button
             onClick={onLogout}
             className="w-full flex items-center justify-center gap-2 px-4 py-2 rounded-lg border border-slate-600 text-slate-300 hover:bg-slate-800 hover:text-white transition-colors text-sm"
           >
@@ -112,7 +94,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, activeTab, onTabChange
           </button>
         </div>
       </nav>
-      
+
       {/* Main Content */}
       <main className="flex-1 overflow-auto h-screen relative">
         {children}

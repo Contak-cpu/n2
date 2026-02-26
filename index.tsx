@@ -2,11 +2,11 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App';
 
-// Clear old cached data to load new products (v2)
+// Clear old cached data when version changes
 const cacheVersion = localStorage.getItem('app_version');
-if (cacheVersion !== 'v2-88products') {
+if (cacheVersion !== 'v3-roles') {
   localStorage.clear();
-  localStorage.setItem('app_version', 'v2-88products');
+  localStorage.setItem('app_version', 'v3-roles');
 }
 
 const rootElement = document.getElementById('root');

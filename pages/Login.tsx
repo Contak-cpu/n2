@@ -20,7 +20,7 @@ export const Login: React.FC<LoginProps> = ({ onLogin }) => {
     <div className="min-h-screen bg-slate-900 flex items-center justify-center p-4">
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden">
         <div className="bg-blue-600 p-8 text-center">
-          <h1 className="text-3xl font-bold text-white mb-2">Mayorista Nueva Era</h1>
+          <h1 className="text-3xl font-bold text-white mb-2">Nueva Era</h1>
           <p className="text-blue-100">Sistema de Gestión ERP</p>
         </div>
         
@@ -63,9 +63,12 @@ export const Login: React.FC<LoginProps> = ({ onLogin }) => {
             INICIAR SESIÓN
           </button>
           
-          <div className="text-center text-xs text-gray-400 mt-4">
-            <p>Demo: usuario "admin" / clave "123"</p>
-            <p>Cajero: usuario "caja1" / clave "123"</p>
+          <div className="mt-4 p-3 bg-gray-50 rounded-lg text-xs text-gray-500 space-y-1">
+            <p className="font-semibold text-gray-600 mb-1">Accesos demo (clave: 123)</p>
+            <p><span className="font-medium text-blue-600">admin</span> → Administrador (acceso total)</p>
+            <p><span className="font-medium text-indigo-600">supervisor</span> → Supervisora (POS + Inventario + Reportes)</p>
+            <p><span className="font-medium text-green-600">caja1</span> – <span className="font-medium text-green-600">caja4</span> → Cajeros (solo POS)</p>
+            <p><span className="font-medium text-orange-600">repo1</span> / <span className="font-medium text-orange-600">repo2</span> → Repositores</p>
           </div>
         </form>
       </div>

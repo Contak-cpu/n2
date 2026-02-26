@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Product, Transaction, TransactionType, User, Supplier, Client, CheckoutLine, Promotion } from '../types';
+import { Product, Transaction, TransactionType, User, Supplier, Client, CheckoutLine, Promotion, Egreso } from '../types';
 import { INITIAL_PRODUCTS, INITIAL_USERS, INITIAL_SUPPLIERS, INITIAL_CLIENTS, INITIAL_CHECKOUT_LINES, INITIAL_PROMOTIONS } from '../constants';
 
 export const useStore = () => {
@@ -40,6 +40,11 @@ export const useStore = () => {
     return saved ? JSON.parse(saved) : INITIAL_PROMOTIONS;
   });
 
+  const [egresos, setEgresos] = useState<Egreso[]>(() => {
+    const saved = localStorage.getItem('erp_egresos');
+    return saved ? JSON.parse(saved) : [];
+  });
+
   // --- PERSISTENCE ---
   useEffect(() => {
     if (currentUser) {
@@ -55,6 +60,7 @@ export const useStore = () => {
   useEffect(() => { localStorage.setItem('erp_clients', JSON.stringify(clients)); }, [clients]);
   useEffect(() => { localStorage.setItem('erp_checkout_lines', JSON.stringify(checkoutLines)); }, [checkoutLines]);
   useEffect(() => { localStorage.setItem('erp_promotions', JSON.stringify(promotions)); }, [promotions]);
+  useEffect(() => { localStorage.setItem('erp_egresos', JSON.stringify(egresos)); }, [egresos]);
 
   // --- ACTIONS ---
 
@@ -135,6 +141,14 @@ export const useStore = () => {
     return promotions.filter(p => p.active && new Date(p.validFrom) <= new Date() && new Date() <= new Date(p.validTo));
   };
 
+  const addEgreso = (egreso: Egreso) => {
+    setEgresos(prev => [egreso, ...prev]);
+  };
+
+  const removeEgreso = (id: string) => {
+    setEgresos(prev => prev.filter(e => e.id !== id));
+  };
+
   return {
     currentUser,
     products,
@@ -143,6 +157,7 @@ export const useStore = () => {
     clients,
     checkoutLines,
     promotions,
+    egresos,
     login,
     logout,
     addProduct,
@@ -158,6 +173,8 @@ export const useStore = () => {
     addPromotion,
     updatePromotion,
     getActivePromotions,
+    addEgreso,
+    removeEgreso,
     getBalance
   };
 };

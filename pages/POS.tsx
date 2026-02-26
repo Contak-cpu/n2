@@ -1,8 +1,9 @@
 import React, { useState, useMemo } from 'react';
-import { Search, Trash2, CreditCard, ShoppingBag, Image as ImageIcon, Users, UserPlus } from 'lucide-react';
+import { Search, Trash2, CreditCard, ShoppingBag, Users, UserPlus } from 'lucide-react';
 import { Product, CartItem, Client, Transaction } from '../types';
 import { PaymentModal } from '../components/PaymentModal';
 import { ReceiptModal } from '../components/ReceiptModal';
+import { ProductIcon } from '../components/ProductIcon';
 
 interface POSProps {
   products: Product[];
@@ -88,7 +89,7 @@ export const POS: React.FC<POSProps> = ({ products, clients, onCheckout }) => {
           </div>
         </div>
 
-        <div className="flex-1 overflow-y-auto grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4 pb-4">
+        <div className="flex-1 overflow-y-auto grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4 pb-4 content-start">
           {filteredProducts.map(product => {
             const price = product.priceRetail;
             const isLowStock = product.stock < 10;
@@ -97,18 +98,13 @@ export const POS: React.FC<POSProps> = ({ products, clients, onCheckout }) => {
                 key={product.id}
                 onClick={() => addToCart(product)}
                 disabled={product.stock <= 0}
-                className={`bg-white p-4 rounded-xl border shadow-sm hover:shadow-md transition-all text-left flex flex-col justify-between relative overflow-hidden group ${
+                style={{ minHeight: '200px' }}
+                className={`bg-white p-4 rounded-xl border shadow-sm hover:shadow-md transition-all text-left flex flex-col justify-between relative group ${
                   product.stock <= 0 ? 'opacity-50 cursor-not-allowed' : 'hover:border-blue-400'
                 } ${isLowStock ? 'border-red-100' : 'border-gray-100'}`}
               >
-                <div className="w-full h-32 mb-3 bg-gray-100 rounded-lg overflow-hidden relative">
-                   {product.imageUrl ? (
-                     <img src={product.imageUrl} alt={product.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
-                   ) : (
-                     <div className="w-full h-full flex items-center justify-center text-gray-300">
-                       <ImageIcon size={32} />
-                     </div>
-                   )}
+                <div className="w-full h-32 mb-3 rounded-lg overflow-hidden relative">
+                  <ProductIcon category={product.category} size="md" className="w-full h-full rounded-lg" />
                 </div>
 
                 {isLowStock && product.stock > 0 && (
@@ -183,14 +179,8 @@ export const POS: React.FC<POSProps> = ({ products, clients, onCheckout }) => {
           ) : (
             cart.map(item => (
               <div key={item.id} className="flex justify-between items-center bg-gray-50 p-2 pr-3 rounded-lg group hover:bg-white hover:shadow-sm border border-transparent hover:border-gray-100 transition-all">
-                <div className="w-12 h-12 bg-white rounded-md overflow-hidden flex-shrink-0 border border-gray-200 mr-3">
-                   {item.imageUrl ? (
-                     <img src={item.imageUrl} alt={item.name} className="w-full h-full object-cover" />
-                   ) : (
-                     <div className="w-full h-full flex items-center justify-center text-gray-300">
-                       <ImageIcon size={16} />
-                     </div>
-                   )}
+                <div className="w-12 h-12 rounded-md overflow-hidden flex-shrink-0 border border-gray-100 mr-3">
+                  <ProductIcon category={item.category} size="md" className="w-full h-full" />
                 </div>
 
                 <div className="flex-1 min-w-0 pr-3">

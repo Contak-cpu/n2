@@ -51,7 +51,7 @@ export interface DashboardStats {
 
 // --- NEW TYPES FOR SCALABILITY ---
 
-export type UserRole = 'ADMIN' | 'CASHIER';
+export type UserRole = 'ADMIN' | 'CASHIER' | 'SUPERVISOR' | 'REPOSITOR';
 
 export interface User {
   id: string;
@@ -121,4 +121,24 @@ export interface AuditLog {
   entityId: string;
   timestamp: Date;
   details?: any;
+}
+
+export type EgresoCategory =
+  | 'Sueldos y Honorarios'
+  | 'Alquiler'
+  | 'Servicios (Luz/Gas/Internet)'
+  | 'Compra de Mercadería'
+  | 'Mantenimiento'
+  | 'Impuestos y Tasas'
+  | 'Logística y Flete'
+  | 'Otros';
+
+export interface Egreso {
+  id: string;
+  date: string;
+  amount: number;
+  category: EgresoCategory;
+  description: string;
+  method: PaymentMethod | 'Transferencia';
+  registeredBy: string;
 }
