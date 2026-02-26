@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Search, Package, CheckCircle, AlertTriangle, Clock, TrendingUp, ClipboardList, Plus, Minus, ScanBarcode } from 'lucide-react';
+import { Search, Package, CheckCircle, AlertTriangle, Clock, TrendingUp, ClipboardList, Plus, Minus, ScanBarcode, Users } from 'lucide-react';
 import { Product, User } from '../types';
 import { ProductIcon } from '../components/ProductIcon';
 import { BarcodeScannerModal } from '../components/BarcodeScannerModal';
@@ -8,6 +8,7 @@ interface RepositorProps {
   products: Product[];
   currentUser: User;
   restocking: { id: string; productId: string; quantity: number; repostorId: string; timestamp: string }[];
+  users: User[];
   onRestockFromDepot: (productId: string, quantity: number, repostorId: string, repostorName?: string) => void;
 }
 
@@ -18,7 +19,7 @@ const CRITICAL_STOCK = 5;
 const shelfStock = (p: Product) => p.stockGondola;
 const totalStock = (p: Product) => p.stockDepot + p.stockGondola;
 
-export const Repositor: React.FC<RepositorProps> = ({ products, currentUser, restocking, onRestockFromDepot }) => {
+export const Repositor: React.FC<RepositorProps> = ({ products, currentUser, restocking, users, onRestockFromDepot }) => {
   const [search, setSearch] = useState('');
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [quantity, setQuantity] = useState(1);
@@ -339,7 +340,7 @@ export const Repositor: React.FC<RepositorProps> = ({ products, currentUser, res
             )}
           </div>
 
-          {/* Historial de reposiciones de hoy */}
+          {/* Historial de reposiciones (compartido entre todo el equipo) */}
           <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
             <div className="bg-gray-50 px-4 py-3 border-b border-gray-100">
               <h3 className="font-semibold text-gray-700 text-sm flex items-center gap-2">
@@ -351,6 +352,10 @@ export const Repositor: React.FC<RepositorProps> = ({ products, currentUser, res
                   </span>
                 )}
               </h3>
+              <p className="text-xs text-gray-500 mt-1 flex items-center gap-1">
+                <Users size={12} />
+                Historial compartido (todo el equipo)
+              </p>
             </div>
             <div className="divide-y divide-gray-50" style={{ maxHeight: '280px', overflowY: 'auto' }}>
               {restocking.length === 0 ? (
@@ -361,6 +366,7 @@ export const Repositor: React.FC<RepositorProps> = ({ products, currentUser, res
               ) : (
                 restocking.slice(0, 50).map(r => {
                   const name = products.find(p => p.id === r.productId)?.name ?? r.productId;
+                  const repostorName = users.find(u => u.id === r.repostorId)?.fullName ?? r.repostorId;
                   const ts = typeof r.timestamp === 'string' ? new Date(r.timestamp) : (r as any).timestamp;
                   return (
                     <div key={r.id} className="px-4 py-3 flex items-center gap-3">
@@ -369,6 +375,8 @@ export const Repositor: React.FC<RepositorProps> = ({ products, currentUser, res
                         <p className="text-xs font-semibold text-gray-700 truncate">{name}</p>
                         <p className="text-xs text-gray-400">
                           {(ts instanceof Date ? ts : new Date(ts as string)).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' })}
+                          {' · por '}
+                          <span className="font-medium text-gray-600">{repostorName}</span>
                         </p>
                       </div>
                       <span className="text-sm font-bold text-green-600 flex-shrink-0">+{r.quantity}</span>

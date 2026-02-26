@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import {
-  LayoutDashboard, ShoppingCart, Package, DollarSign, Truck,
+  LayoutDashboard, Home, ShoppingCart, Package, DollarSign, Truck,
   Gift, BarChart3, LogOut, User as UserIcon, TrendingDown, ClipboardList,
   FileText, Users, Settings as SettingsIcon, Menu, X, LayoutGrid
 } from 'lucide-react';
@@ -80,6 +80,9 @@ export const Layout: React.FC<LayoutProps> = ({ children, activeTab, onTabChange
           </div>
 
           <div className="p-4 space-y-1">
+            {/* INICIO: todos los roles */}
+            {navBtn('inicio', 'Inicio', Home)}
+
             {/* CAJERO: solo POS */}
             {(isAdmin || isSupervisor || role === 'CASHIER') && navBtn('pos', 'Punto de Venta', ShoppingCart)}
 
@@ -87,7 +90,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, activeTab, onTabChange
             {features.moduloCajas && (isAdmin || isSupervisor) && navBtn('cajas', 'Cajas', LayoutGrid)}
 
             {/* REPOSITOR: solo su módulo */}
-            {features.moduloRepositor && isRepositor && navBtn('repositor', 'Reposición de Stock', ClipboardList)}
+            {features.moduloRepositor && (isRepositor || isAdmin) && navBtn('repositor', 'Reposición de Stock', ClipboardList)}
 
             {/* SUPERVISOR y ADMIN */}
             {(isAdmin || isSupervisor) && navBtn('inventory', 'Inventario', Package)}

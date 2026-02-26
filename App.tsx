@@ -13,22 +13,30 @@ import { AuditLog } from './pages/AuditLog';
 import { Users } from './pages/Users';
 import { Settings } from './pages/Settings';
 import { Cajas } from './pages/Cajas';
+import { Inicio } from './pages/Inicio';
 import { useStore } from './hooks/useStore';
 import { INITIAL_USERS } from './constants';
 import { TransactionType, CartItem, Client, Transaction } from './types';
 
 const DEFAULT_TAB_BY_ROLE: Record<string, string> = {
-  ADMIN: 'pos',
-  SUPERVISOR: 'pos',
-  CASHIER: 'pos',
-  REPOSITOR: 'repositor',
+  ADMIN: 'inicio',
+  SUPERVISOR: 'inicio',
+  CASHIER: 'inicio',
+  REPOSITOR: 'inicio',
 };
 
 const App: React.FC = () => {
   const store = useStore();
   const [activeTab, setActiveTab] = useState(() => {
-    return DEFAULT_TAB_BY_ROLE[store.currentUser?.role ?? 'CASHIER'] ?? 'pos';
+    return DEFAULT_TAB_BY_ROLE[store.currentUser?.role ?? 'CASHIER'] ?? 'inicio';
   });
+
+  // Al iniciar sesión (o cambiar usuario), ir a la sección por defecto del rol para no dejar pantalla en blanco
+  React.useEffect(() => {
+    if (store.currentUser) {
+      setActiveTab(DEFAULT_TAB_BY_ROLE[store.currentUser.role] ?? 'inicio');
+    }
+  }, [store.currentUser?.id]);
 
   if (!store.currentUser) {
     return <Login onLogin={store.login} />;
@@ -73,12 +81,12 @@ const App: React.FC = () => {
   };
 
   const handleTabChange = (tab: string) => {
-    // Validar que el rol tenga acceso a esa pestaña
     const adminOnly = ['finance', 'egresos', 'suppliers', 'promotions', 'audit', 'users', 'settings'];
-    const supervisorAllowed = ['pos', 'inventory', 'reports', 'cajas'];
-    const cashierAllowed = ['pos'];
-    const repositorAllowed = ['repositor'];
+    const supervisorAllowed = ['inicio', 'pos', 'inventory', 'reports', 'cajas'];
+    const cashierAllowed = ['inicio', 'pos'];
+    const repositorAllowed = ['inicio', 'repositor'];
 
+    if (tab === 'inicio') { setActiveTab(tab); return; }
     if (isAdmin) { setActiveTab(tab); return; }
     if (isSupervisor && supervisorAllowed.includes(tab)) { setActiveTab(tab); return; }
     if (role === 'CASHIER' && cashierAllowed.includes(tab)) { setActiveTab(tab); return; }
@@ -92,6 +100,21 @@ const App: React.FC = () => {
       currentUser={store.currentUser}
       onLogout={store.logout}
     >
+      {/* INICIO - todos los roles (contenido según rol) */}
+      {activeTab === 'inicio' && (
+        <Inicio
+          currentUser={store.currentUser}
+          products={store.products}
+          restocking={store.restocking}
+          transactions={store.transactions}
+          checkoutLines={store.checkoutLines}
+          users={store.users}
+          currentBalance={store.getBalance()}
+          egresos={store.egresos}
+          onNavigate={setActiveTab}
+        />
+      )}
+
       {/* POS - accesible para Admin, Supervisor, Cajero */}
       {activeTab === 'pos' && role !== 'REPOSITOR' && (
         <POS
@@ -180,6 +203,7 @@ const App: React.FC = () => {
           products={store.products}
           currentUser={store.currentUser}
           restocking={store.restocking}
+          users={store.users}
           onRestockFromDepot={store.restockFromDepot}
         />
       )}
