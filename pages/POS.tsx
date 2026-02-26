@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { Search, Trash2, CreditCard, ShoppingBag, Image as ImageIcon, Users, UserPlus } from 'lucide-react';
-import { Product, CartItem, PricingMode, Client, Transaction } from '../types';
+import { Product, CartItem, Client, Transaction } from '../types';
 import { PaymentModal } from '../components/PaymentModal';
 import { ReceiptModal } from '../components/ReceiptModal';
 
@@ -13,9 +13,8 @@ interface POSProps {
 export const POS: React.FC<POSProps> = ({ products, clients, onCheckout }) => {
   const [cart, setCart] = useState<CartItem[]>([]);
   const [search, setSearch] = useState('');
-  const [pricingMode, setPricingMode] = useState<PricingMode>('RETAIL');
-  const [selectedClient, setSelectedClient] = useState<Client>(clients[0]); // Default to consumer final
-  
+  const [selectedClient, setSelectedClient] = useState<Client>(clients[0]);
+
   const [isPaymentModalOpen, setPaymentModalOpen] = useState(false);
   const [lastTransaction, setLastTransaction] = useState<Transaction | null>(null);
 
@@ -31,19 +30,18 @@ export const POS: React.FC<POSProps> = ({ products, clients, onCheckout }) => {
   // Cart operations
   const addToCart = (product: Product) => {
     if (product.stock <= 0) return;
-    
+
     setCart(prev => {
       const existing = prev.find(item => item.id === product.id);
-      const price = pricingMode === 'RETAIL' ? product.priceRetail : product.priceWholesale;
-      
+
       if (existing) {
-        return prev.map(item => 
-          item.id === product.id 
-            ? { ...item, quantity: item.quantity + 1, appliedPrice: price } 
+        return prev.map(item =>
+          item.id === product.id
+            ? { ...item, quantity: item.quantity + 1 }
             : item
         );
       }
-      return [...prev, { ...product, quantity: 1, appliedPrice: price }];
+      return [...prev, { ...product, quantity: 1, appliedPrice: product.priceRetail }];
     });
   };
 
@@ -62,12 +60,6 @@ export const POS: React.FC<POSProps> = ({ products, clients, onCheckout }) => {
     }));
   };
 
-  React.useEffect(() => {
-    setCart(prev => prev.map(item => ({
-      ...item,
-      appliedPrice: pricingMode === 'RETAIL' ? item.priceRetail : item.priceWholesale
-    })));
-  }, [pricingMode]);
 
   const total = cart.reduce((sum, item) => sum + (item.appliedPrice * item.quantity), 0);
 
@@ -94,30 +86,11 @@ export const POS: React.FC<POSProps> = ({ products, clients, onCheckout }) => {
               autoFocus
             />
           </div>
-          
-          <div className="bg-white p-1 rounded-lg border border-gray-200 shadow-sm flex">
-             <button
-                onClick={() => setPricingMode('RETAIL')}
-                className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-                  pricingMode === 'RETAIL' ? 'bg-blue-600 text-white' : 'text-gray-600 hover:bg-gray-50'
-                }`}
-              >
-                Minorista
-              </button>
-              <button
-                onClick={() => setPricingMode('WHOLESALE')}
-                className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-                  pricingMode === 'WHOLESALE' ? 'bg-purple-600 text-white' : 'text-gray-600 hover:bg-gray-50'
-                }`}
-              >
-                Mayorista
-              </button>
-          </div>
         </div>
 
         <div className="flex-1 overflow-y-auto grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4 pb-4">
           {filteredProducts.map(product => {
-            const price = pricingMode === 'RETAIL' ? product.priceRetail : product.priceWholesale;
+            const price = product.priceRetail;
             const isLowStock = product.stock < 10;
             return (
               <button
@@ -156,7 +129,7 @@ export const POS: React.FC<POSProps> = ({ products, clients, onCheckout }) => {
                 
                 <div className="mt-2 pt-2 border-t border-gray-50">
                   <div className="flex items-baseline justify-between">
-                    <span className={`text-lg font-bold ${pricingMode === 'WHOLESALE' ? 'text-purple-700' : 'text-blue-700'}`}>
+                    <span className="text-lg font-bold text-blue-700">
                       ${price.toLocaleString()}
                     </span>
                     <span className="text-xs text-gray-400">{product.stock} un.</span>
@@ -176,11 +149,6 @@ export const POS: React.FC<POSProps> = ({ products, clients, onCheckout }) => {
               <ShoppingBag className="text-blue-600" />
               Ticket
             </h2>
-            <div className={`px-2 py-1 rounded text-xs font-bold uppercase ${
-              pricingMode === 'WHOLESALE' ? 'bg-purple-100 text-purple-700' : 'bg-blue-100 text-blue-700'
-            }`}>
-              {pricingMode === 'WHOLESALE' ? 'Mayorista' : 'Minorista'}
-            </div>
           </div>
           
           {/* Client Selector */}
