@@ -1,7 +1,7 @@
-import React, { useState, useRef } from 'react';
+import React, { useState } from 'react';
 import { Product } from '../types';
-import { Search, Plus, Edit2, AlertTriangle, Save, X, Image as ImageIcon, Upload } from 'lucide-react';
-import { LOW_STOCK_THRESHOLD } from '../constants';
+import { Search, Plus, Edit2, AlertTriangle, Save, X, Image as ImageIcon } from 'lucide-react';
+import { LOW_STOCK_THRESHOLD, PRODUCT_CATEGORIES } from '../constants';
 
 interface InventoryProps {
   products: Product[];
@@ -13,7 +13,6 @@ export const Inventory: React.FC<InventoryProps> = ({ products, onAddProduct, on
   const [search, setSearch] = useState('');
   const [editingProduct, setEditingProduct] = useState<Partial<Product> | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const filteredProducts = products.filter(p => 
     p.name.toLowerCase().includes(search.toLowerCase()) || 
@@ -45,7 +44,6 @@ export const Inventory: React.FC<InventoryProps> = ({ products, onAddProduct, on
       category: 'General',
       cost: 0,
       price: 0,
-      imageUrl: '',
       stockDepot: 0,
       stockGondola: 0,
     });
@@ -55,17 +53,6 @@ export const Inventory: React.FC<InventoryProps> = ({ products, onAddProduct, on
   const openEditProduct = (p: Product) => {
     setEditingProduct({ ...p });
     setIsModalOpen(true);
-  };
-
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setEditingProduct(prev => prev ? ({ ...prev, imageUrl: reader.result as string }) : null);
-      };
-      reader.readAsDataURL(file);
-    }
   };
 
   return (
@@ -172,50 +159,7 @@ export const Inventory: React.FC<InventoryProps> = ({ products, onAddProduct, on
             </div>
             
             <form onSubmit={handleSave} className="p-6 space-y-4">
-              {/* Image Preview & Upload */}
-              <div className="flex justify-center mb-4">
-                <div className="relative group">
-                  <div className="w-32 h-32 bg-gray-100 rounded-xl overflow-hidden border-2 border-dashed border-gray-300 flex items-center justify-center">
-                    {editingProduct.imageUrl ? (
-                      <img src={editingProduct.imageUrl} alt="Preview" className="w-full h-full object-cover" />
-                    ) : (
-                      <div className="text-center text-gray-400 p-2">
-                        <ImageIcon className="mx-auto mb-1" />
-                        <span className="text-xs">Sin imagen</span>
-                      </div>
-                    )}
-                  </div>
-                  
-                  {/* Upload Button */}
-                  <input 
-                    type="file" 
-                    ref={fileInputRef}
-                    className="hidden" 
-                    accept="image/*"
-                    onChange={handleImageUpload}
-                  />
-                  <button
-                    type="button"
-                    onClick={() => fileInputRef.current?.click()}
-                    className="absolute bottom-[-10px] left-1/2 transform -translate-x-1/2 bg-blue-600 text-white text-xs px-3 py-1.5 rounded-full shadow-md flex items-center gap-1 hover:bg-blue-700 transition-colors whitespace-nowrap"
-                  >
-                    <Upload size={12} />
-                    Subir foto
-                  </button>
-                </div>
-              </div>
-
-              <div className="mt-4">
-                <label className="block text-xs font-bold text-gray-500 uppercase mb-1">URL de Imagen (Opcional)</label>
-                <input 
-                  className="w-full border rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
-                  placeholder="https://ejemplo.com/foto.jpg"
-                  value={editingProduct.imageUrl || ''}
-                  onChange={e => setEditingProduct({...editingProduct, imageUrl: e.target.value})}
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-4 mt-2">
+              <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-xs font-bold text-gray-500 uppercase mb-1">SKU</label>
                   <input 
@@ -235,12 +179,16 @@ export const Inventory: React.FC<InventoryProps> = ({ products, onAddProduct, on
                 </div>
                 <div className="col-span-2">
                   <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Categoría</label>
-                  <input 
-                    required 
-                    className="w-full border rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
-                    value={editingProduct.category}
+                  <select
+                    required
+                    className="w-full border rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none bg-white"
+                    value={editingProduct.category || 'General'}
                     onChange={e => setEditingProduct({...editingProduct, category: e.target.value})}
-                  />
+                  >
+                    {PRODUCT_CATEGORIES.map(cat => (
+                      <option key={cat} value={cat}>{cat}</option>
+                    ))}
+                  </select>
                 </div>
               </div>
 

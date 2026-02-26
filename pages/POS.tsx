@@ -1,11 +1,12 @@
 import React, { useState, useMemo } from 'react';
-import { Search, Trash2, CreditCard, ShoppingBag, Users, UserPlus, Camera, BarChart3 } from 'lucide-react';
+import { Search, Trash2, CreditCard, ShoppingBag, Users, UserPlus, Camera, BarChart3, ChevronLeft, ChevronRight, LayoutGrid } from 'lucide-react';
 import { Product, CartItem, Client, Transaction, TransactionType, CheckoutLine, User, Promotion } from '../types';
 import { PaymentModal } from '../components/PaymentModal';
 import { ReceiptModal } from '../components/ReceiptModal';
 import { ProductIcon } from '../components/ProductIcon';
 import { CheckoutLineCard } from '../components/CheckoutLineCard';
 import { BarcodeScannerModal } from '../components/BarcodeScannerModal';
+import { getFeatureSettings } from '../utils/featureSettings';
 
 interface POSProps {
   products: Product[];
@@ -39,6 +40,8 @@ export const POS: React.FC<POSProps> = ({
   const [isPaymentModalOpen, setPaymentModalOpen] = useState(false);
   const [lastTransaction, setLastTransaction] = useState<Transaction | null>(null);
   const [isScannerOpen, setScannerOpen] = useState(false);
+  const [showCajasPanel, setShowCajasPanel] = useState(true);
+  const [showResumenPanel, setShowResumenPanel] = useState(true);
 
   // Filter products
   const filteredProducts = useMemo(() => {
@@ -84,6 +87,9 @@ export const POS: React.FC<POSProps> = ({
   };
 
 
+  const features = getFeatureSettings();
+  const activePromotionsFiltered = features.promocionesPOS ? activePromotions : [];
+
   // Subtotal sin descuentos (precio base × cantidad)
   const subtotal = useMemo(
     () => cart.reduce((sum, item) => sum + item.price * item.quantity, 0),
@@ -95,7 +101,7 @@ export const POS: React.FC<POSProps> = ({
     let discount = 0;
     const now = new Date();
 
-    for (const promo of activePromotions) {
+    for (const promo of activePromotionsFiltered) {
       const from = new Date(promo.validFrom);
       const to = new Date(promo.validTo);
       if (!promo.active || now < from || now > to) continue;
@@ -132,7 +138,7 @@ export const POS: React.FC<POSProps> = ({
     }
 
     return { discountAmount: discount, total: Math.max(0, subtotal - discount) };
-  }, [cart, subtotal, activePromotions]);
+  }, [cart, subtotal, activePromotionsFiltered]);
 
   const handlePaymentSuccess = (method: any) => {
     const transaction = onCheckout(selectedLineId ?? undefined, cart, total, method, selectedClient);
@@ -143,42 +149,91 @@ export const POS: React.FC<POSProps> = ({
 
   const getCashierName = (cashierId: string) => users.find(u => u.id === cashierId)?.fullName ?? cashierId;
 
+  const isCashier = currentUser?.role === 'CASHIER';
+
+  /** Cajero solo ve su caja abierta o las cerradas para abrir una (sin ver datos de otras). */
+  const visibleLines = useMemo(() => {
+    if (!isCashier || !currentUser) return checkoutLines;
+    const myOpenLine = checkoutLines.find(l => l.status === 'OPEN' && l.cashierId === currentUser.id);
+    if (myOpenLine) return [myOpenLine];
+    return checkoutLines.filter(l => l.status === 'CLOSED');
+  }, [checkoutLines, isCashier, currentUser]);
+
+  /** Resumen del día: para cajero solo su caja; para admin/supervisor todas. */
   const daySummary = useMemo(() => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-    const todayTx = transactions.filter(t => {
+    let todayTx = transactions.filter(t => {
       const d = new Date(t.date);
       d.setHours(0, 0, 0, 0);
       return d.getTime() === today.getTime() && t.type === TransactionType.INCOME;
     });
+    if (isCashier && selectedLineId) {
+      todayTx = todayTx.filter(t => t.lineId === selectedLineId);
+    }
     const totalSales = todayTx.reduce((acc, t) => acc + (t.amount ?? 0), 0);
     return {
       totalSales,
       transactionCount: todayTx.length,
       average: todayTx.length > 0 ? totalSales / todayTx.length : 0,
     };
-  }, [transactions]);
+  }, [transactions, isCashier, selectedLineId]);
+
+  /** Cajero: si tiene una sola caja (la suya), seleccionarla por defecto. */
+  React.useEffect(() => {
+    if (!isCashier || !currentUser) return;
+    const myOpen = checkoutLines.find(l => l.status === 'OPEN' && l.cashierId === currentUser.id);
+    if (myOpen && selectedLineId !== myOpen.id) setSelectedLineId(myOpen.id);
+  }, [isCashier, currentUser, checkoutLines, selectedLineId]);
 
   return (
     <div className="flex flex-col lg:flex-row h-full overflow-hidden">
-      {/* Left: Líneas de caja */}
-      <div className="w-full lg:w-64 flex-shrink-0 border-r border-gray-200 bg-gray-50/50 p-4 overflow-y-auto">
-        <h3 className="font-bold text-gray-800 mb-3 flex items-center gap-2">
-          <BarChart3 size={18} className="text-blue-600" />
-          Cajas
-        </h3>
-        <div className="grid grid-cols-2 lg:grid-cols-1 gap-2">
-          {checkoutLines.map(line => (
-            <CheckoutLineCard
-              key={line.id}
-              line={line}
-              cashierName={line.cashierId ? getCashierName(line.cashierId) : undefined}
-              isSelected={selectedLineId === line.id}
-              onClick={() => setSelectedLineId(line.id)}
-            />
-          ))}
+      {/* Left: Líneas de caja - colapsable */}
+      {showCajasPanel ? (
+        <div className="w-full lg:w-56 xl:w-64 flex-shrink-0 border-r border-gray-200 bg-gray-50/50 flex flex-col">
+          <div className="p-3 border-b border-gray-200 flex items-center justify-between flex-shrink-0">
+            <h3 className="font-bold text-gray-800 flex items-center gap-2">
+              <LayoutGrid size={18} className="text-blue-600" />
+              {isCashier ? 'Mi caja' : 'Cajas'}
+            </h3>
+            <button
+              type="button"
+              onClick={() => setShowCajasPanel(false)}
+              className="p-1.5 rounded-lg text-gray-500 hover:bg-gray-200 hover:text-gray-700 lg:block hidden"
+              title="Comprimir panel"
+            >
+              <ChevronLeft size={18} />
+            </button>
+          </div>
+          <div className="flex-1 overflow-y-auto p-3 grid grid-cols-2 lg:grid-cols-1 gap-2">
+            {visibleLines.map(line => (
+              <CheckoutLineCard
+                key={line.id}
+                line={line}
+                cashierName={line.cashierId ? getCashierName(line.cashierId) : undefined}
+                isSelected={selectedLineId === line.id}
+                onClick={() => setSelectedLineId(line.id)}
+                onOpen={currentUser ? (id) => openCheckoutLine?.(id, currentUser.id) : undefined}
+                onClose={closeCheckoutLine}
+                currentUserId={currentUser?.id}
+                hideStats={isCashier && line.status === 'CLOSED'}
+              />
+            ))}
+          </div>
         </div>
-      </div>
+      ) : (
+        <div className="hidden lg:flex flex-col w-12 flex-shrink-0 border-r border-gray-200 bg-gray-100/80 items-center py-2">
+          <button
+            type="button"
+            onClick={() => setShowCajasPanel(true)}
+            className="p-2 rounded-lg text-gray-600 hover:bg-gray-200 hover:text-blue-600 flex flex-col items-center gap-0.5"
+            title="Expandir cajas"
+          >
+            <LayoutGrid size={20} />
+            <ChevronRight size={14} />
+          </button>
+        </div>
+      )}
 
       {/* Center: Product Catalog + Cart */}
       <div className="flex-1 flex flex-col lg:flex-row h-full overflow-hidden min-w-0">
@@ -195,14 +250,16 @@ export const POS: React.FC<POSProps> = ({
               autoFocus
             />
           </div>
-          <button
-            type="button"
-            onClick={() => setScannerOpen(true)}
-            className="flex items-center justify-center gap-2 px-4 py-3 rounded-xl border-2 border-blue-200 bg-blue-50 text-blue-700 font-medium hover:bg-blue-100 transition-colors"
-          >
-            <Camera size={20} />
-            Escanear
-          </button>
+          {features.escanerPOS && (
+            <button
+              type="button"
+              onClick={() => setScannerOpen(true)}
+              className="flex items-center justify-center gap-2 px-4 py-3 rounded-xl border-2 border-blue-200 bg-blue-50 text-blue-700 font-medium hover:bg-blue-100 transition-colors"
+            >
+              <Camera size={20} />
+              Escanear
+            </button>
+          )}
         </div>
 
         <div className="flex-1 overflow-y-auto grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4 pb-4 content-start">
@@ -374,27 +431,51 @@ export const POS: React.FC<POSProps> = ({
         </div>
       </div>
 
-      {/* Right: Resumen del día */}
-      <div className="w-full lg:w-72 flex-shrink-0 border-l border-gray-200 bg-gray-50/80 p-4 overflow-y-auto hidden xl:block">
-        <h3 className="font-bold text-gray-800 mb-3 flex items-center gap-2">
-          <BarChart3 size={18} className="text-green-600" />
-          Resumen del día
-        </h3>
-        <div className="space-y-3">
-          <div className="bg-white rounded-xl p-4 border border-gray-100 shadow-sm">
-            <p className="text-xs text-gray-500 uppercase font-medium">Total vendido</p>
-            <p className="text-2xl font-bold text-green-700">${daySummary.totalSales.toLocaleString()}</p>
+      {/* Right: Resumen del día - colapsable (cajero solo ve su caja) */}
+      {showResumenPanel ? (
+        <div className="w-full lg:w-64 xl:w-72 flex-shrink-0 border-l border-gray-200 bg-gray-50/80 flex flex-col hidden lg:flex">
+          <div className="p-3 border-b border-gray-200 flex items-center justify-between flex-shrink-0">
+            <h3 className="font-bold text-gray-800 flex items-center gap-2">
+              <BarChart3 size={18} className="text-green-600" />
+              {isCashier ? 'Mi resumen' : 'Resumen'}
+            </h3>
+            <button
+              type="button"
+              onClick={() => setShowResumenPanel(false)}
+              className="p-1.5 rounded-lg text-gray-500 hover:bg-gray-200 hover:text-gray-700"
+              title="Comprimir panel"
+            >
+              <ChevronRight size={18} />
+            </button>
           </div>
-          <div className="bg-white rounded-xl p-4 border border-gray-100 shadow-sm">
-            <p className="text-xs text-gray-500 uppercase font-medium">Transacciones</p>
-            <p className="text-2xl font-bold text-gray-800">{daySummary.transactionCount}</p>
-          </div>
-          <div className="bg-white rounded-xl p-4 border border-gray-100 shadow-sm">
-            <p className="text-xs text-gray-500 uppercase font-medium">Promedio por venta</p>
-            <p className="text-xl font-bold text-blue-700">${daySummary.average.toLocaleString('es-AR', { maximumFractionDigits: 0 })}</p>
+          <div className="flex-1 overflow-y-auto p-3 space-y-3">
+            <div className="bg-white rounded-xl p-4 border border-gray-100 shadow-sm">
+              <p className="text-xs text-gray-500 uppercase font-medium">Total vendido</p>
+              <p className="text-2xl font-bold text-green-700">${daySummary.totalSales.toLocaleString()}</p>
+            </div>
+            <div className="bg-white rounded-xl p-4 border border-gray-100 shadow-sm">
+              <p className="text-xs text-gray-500 uppercase font-medium">Transacciones</p>
+              <p className="text-2xl font-bold text-gray-800">{daySummary.transactionCount}</p>
+            </div>
+            <div className="bg-white rounded-xl p-4 border border-gray-100 shadow-sm">
+              <p className="text-xs text-gray-500 uppercase font-medium">Promedio</p>
+              <p className="text-xl font-bold text-blue-700">${daySummary.average.toLocaleString('es-AR', { maximumFractionDigits: 0 })}</p>
+            </div>
           </div>
         </div>
-      </div>
+      ) : (
+        <div className="hidden lg:flex flex-col w-12 flex-shrink-0 border-l border-gray-200 bg-gray-100/80 items-center py-2">
+          <button
+            type="button"
+            onClick={() => setShowResumenPanel(true)}
+            className="p-2 rounded-lg text-gray-600 hover:bg-gray-200 hover:text-green-600 flex flex-col items-center gap-0.5"
+            title="Expandir resumen"
+          >
+            <BarChart3 size={20} />
+            <ChevronLeft size={14} />
+          </button>
+        </div>
+      )}
       
       {isScannerOpen && (
         <BarcodeScannerModal

@@ -12,6 +12,7 @@ import { Repositor } from './pages/Repositor';
 import { AuditLog } from './pages/AuditLog';
 import { Users } from './pages/Users';
 import { Settings } from './pages/Settings';
+import { Cajas } from './pages/Cajas';
 import { useStore } from './hooks/useStore';
 import { INITIAL_USERS } from './constants';
 import { TransactionType, CartItem, Client, Transaction } from './types';
@@ -74,7 +75,7 @@ const App: React.FC = () => {
   const handleTabChange = (tab: string) => {
     // Validar que el rol tenga acceso a esa pestaña
     const adminOnly = ['finance', 'egresos', 'suppliers', 'promotions', 'audit', 'users', 'settings'];
-    const supervisorAllowed = ['pos', 'inventory', 'reports'];
+    const supervisorAllowed = ['pos', 'inventory', 'reports', 'cajas'];
     const cashierAllowed = ['pos'];
     const repositorAllowed = ['repositor'];
 
@@ -153,6 +154,17 @@ const App: React.FC = () => {
         />
       )}
 
+      {/* CAJAS - Admin y Supervisor */}
+      {activeTab === 'cajas' && (isAdmin || isSupervisor) && (
+        <Cajas
+          checkoutLines={store.checkoutLines}
+          users={store.users}
+          currentUser={store.currentUser}
+          onOpenLine={store.openCheckoutLine}
+          onCloseLine={store.closeCheckoutLine}
+        />
+      )}
+
       {/* REPORTES - Admin y Supervisor */}
       {activeTab === 'reports' && (isAdmin || isSupervisor) && (
         <Reports
@@ -174,11 +186,24 @@ const App: React.FC = () => {
 
       {/* AUDITORÍA - solo Admin */}
       {activeTab === 'audit' && isAdmin && (
-        <AuditLog auditLogs={store.auditLogs} users={INITIAL_USERS.map(u => ({ id: u.id, fullName: u.fullName }))} />
+        <AuditLog
+          auditLogs={store.auditLogs}
+          users={store.users.map(u => ({ id: u.id, fullName: u.fullName }))}
+          onAddEntry={store.addAuditLog}
+          currentUserId={store.currentUser?.id ?? ''}
+        />
       )}
 
       {/* USUARIOS - solo Admin */}
-      {activeTab === 'users' && isAdmin && <Users users={INITIAL_USERS} />}
+      {activeTab === 'users' && isAdmin && (
+        <Users
+          users={store.users}
+          onAdd={store.addUser}
+          onUpdate={store.updateUser}
+          onRemove={store.removeUser}
+          currentUserId={store.currentUser?.id}
+        />
+      )}
 
       {/* CONFIGURACIÓN - solo Admin */}
       {activeTab === 'settings' && isAdmin && <Settings />}

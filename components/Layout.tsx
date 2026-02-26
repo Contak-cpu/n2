@@ -2,9 +2,10 @@ import React, { useState } from 'react';
 import {
   LayoutDashboard, ShoppingCart, Package, DollarSign, Truck,
   Gift, BarChart3, LogOut, User as UserIcon, TrendingDown, ClipboardList,
-  FileText, Users, Settings as SettingsIcon, Menu, X
+  FileText, Users, Settings as SettingsIcon, Menu, X, LayoutGrid
 } from 'lucide-react';
 import { User } from '../types';
+import { getFeatureSettings } from '../utils/featureSettings';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -23,6 +24,7 @@ const ROLE_LABELS: Record<string, string> = {
 
 export const Layout: React.FC<LayoutProps> = ({ children, activeTab, onTabChange, currentUser, onLogout }) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const features = getFeatureSettings();
   const role = currentUser?.role ?? 'CASHIER';
   const isAdmin = role === 'ADMIN';
   const isSupervisor = role === 'SUPERVISOR';
@@ -81,21 +83,24 @@ export const Layout: React.FC<LayoutProps> = ({ children, activeTab, onTabChange
             {/* CAJERO: solo POS */}
             {(isAdmin || isSupervisor || role === 'CASHIER') && navBtn('pos', 'Punto de Venta', ShoppingCart)}
 
+            {/* Cajas: Admin y Supervisor (respeta configuración) */}
+            {features.moduloCajas && (isAdmin || isSupervisor) && navBtn('cajas', 'Cajas', LayoutGrid)}
+
             {/* REPOSITOR: solo su módulo */}
-            {isRepositor && navBtn('repositor', 'Reposición de Stock', ClipboardList)}
+            {features.moduloRepositor && isRepositor && navBtn('repositor', 'Reposición de Stock', ClipboardList)}
 
             {/* SUPERVISOR y ADMIN */}
             {(isAdmin || isSupervisor) && navBtn('inventory', 'Inventario', Package)}
-            {(isAdmin || isSupervisor) && navBtn('reports', 'Reportes', BarChart3)}
+            {features.moduloReportes && (isAdmin || isSupervisor) && navBtn('reports', 'Reportes', BarChart3)}
 
             {/* SOLO ADMIN */}
             {isAdmin && (
               <>
                 {navBtn('finance', 'Caja y Finanzas', DollarSign)}
-                {navBtn('egresos', 'Egresos', TrendingDown)}
-                {navBtn('suppliers', 'Proveedores', Truck)}
-                {navBtn('promotions', 'Promociones', Gift)}
-                {navBtn('audit', 'Auditoría', FileText)}
+                {features.moduloEgresos && navBtn('egresos', 'Egresos', TrendingDown)}
+                {features.moduloProveedores && navBtn('suppliers', 'Proveedores', Truck)}
+                {features.moduloPromociones && navBtn('promotions', 'Promociones', Gift)}
+                {features.moduloAuditoria && navBtn('audit', 'Auditoría', FileText)}
                 {navBtn('users', 'Usuarios', Users)}
                 {navBtn('settings', 'Configuración', SettingsIcon)}
               </>

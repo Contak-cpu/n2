@@ -110,6 +110,11 @@ export const INITIAL_PRODUCTS: Product[] = [
 
 export const LOW_STOCK_THRESHOLD = 10;
 
+/** Categorías para select en Inventario (nuevo/editar producto). */
+export const PRODUCT_CATEGORIES = [
+  'Bebidas', 'Lácteos', 'Carnes', 'Almacén', 'Congelados', 'Limpieza', 'Snacks', 'Perfumería', 'General'
+];
+
 // ========== USUARIOS ==========
 export const INITIAL_USERS: User[] = [
   { id: '1', username: 'admin',      password: '123', fullName: 'Gerente General',   role: 'ADMIN',      email: 'admin@nuevaera.com.ar',   phone: '11-0000-0001', active: true },

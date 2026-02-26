@@ -109,13 +109,13 @@ export const Egresos: React.FC<EgresosProps> = ({ egresos, onAdd, onRemove, curr
 
       {/* Formulario */}
       {showForm && (
-        <div className="bg-white rounded-xl border border-red-100 shadow-sm mb-6 overflow-hidden">
+        <div className="bg-white rounded-xl border border-red-100 shadow-sm mb-6 overflow-visible">
           <div className="bg-red-50 px-6 py-3 border-b border-red-100">
             <h2 className="font-semibold text-red-700 flex items-center gap-2">
               <Plus size={18} /> Registrar nuevo egreso
             </h2>
           </div>
-          <form onSubmit={handleSubmit} className="p-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+          <form onSubmit={handleSubmit} className="p-6 grid grid-cols-1 md:grid-cols-2 gap-4 overflow-y-auto max-h-[70vh]">
             <div className="md:col-span-2">
               <label className="block text-sm font-medium text-gray-700 mb-1">Descripción *</label>
               <input

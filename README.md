@@ -32,6 +32,14 @@ Sistema de gestión integral para supermercados: POS multi-caja, inventario (dep
 npm run build
 ```
 
+## Desplegar en Vercel (automático)
+
+1. Subí el código a GitHub (este repo: `Contak-cpu/n2`, rama `main`).
+2. En [vercel.com](https://vercel.com) → **Add New** → **Project** → importá el repo de GitHub.
+3. Si el repo tiene la app en un subdirectorio (por ejemplo `nuevaera-main`), en **Root Directory** poné ese directorio; si `package.json` está en la raíz del repo, dejalo vacío.
+4. Build Command: `npm run build`, Output Directory: `dist` (Vercel suele detectarlos si elegís preset **Vite**).
+5. **Deploy**. Cada push a `main` hará un nuevo despliegue automático.
+
 ## Credenciales de demo
 
 - **Admin:** `admin` / `123`

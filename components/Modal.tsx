@@ -41,21 +41,23 @@ export const Modal: React.FC<ModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto">
-      {/* Overlay */}
+    <div className="fixed inset-0 z-50 overflow-y-auto flex items-center justify-center p-4">
+      {/* Overlay - cierra al hacer clic */}
       <div
-        className="fixed inset-0 bg-black bg-opacity-50 transition-opacity"
+        className="fixed inset-0 bg-black/50 transition-opacity z-0"
         onClick={onClose}
+        aria-hidden
       />
 
-      {/* Modal Container */}
-      <div className="flex items-center justify-center min-h-screen p-4 pointer-events-none">
-        <div
-          className={`bg-white rounded-lg shadow-xl ${sizeClasses[size]} w-full pointer-events-auto`}
-          onClick={(e) => e.stopPropagation()}
-        >
+      {/* Caja del modal - por encima del overlay, recibe clic y teclado */}
+      <div
+        role="dialog"
+        aria-modal="true"
+        className={`relative z-10 bg-white rounded-xl shadow-2xl ${sizeClasses[size]} w-full max-h-[90vh] flex flex-col`}
+        onClick={(e) => e.stopPropagation()}
+      >
           {/* Header */}
-          <div className="flex items-center justify-between p-6 border-b border-gray-200">
+          <div className="flex items-center justify-between p-6 border-b border-gray-200 flex-shrink-0">
             <h2 className="text-lg font-semibold text-gray-900">{title}</h2>
             {closeButton && (
               <button
@@ -67,12 +69,11 @@ export const Modal: React.FC<ModalProps> = ({
             )}
           </div>
 
-          {/* Content */}
-          <div className="p-6">{children}</div>
+          {/* Content - scrollable when long (e.g. Promotions form) */}
+          <div className="p-6 overflow-y-auto flex-1 min-h-0">{children}</div>
 
           {/* Footer */}
-          {footer && <div className="p-6 border-t border-gray-200">{footer}</div>}
-        </div>
+          {footer && <div className="p-6 border-t border-gray-200 flex-shrink-0">{footer}</div>}
       </div>
     </div>
   );

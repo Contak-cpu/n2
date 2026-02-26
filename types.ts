@@ -7,7 +7,7 @@ export interface Product {
   subcategory?: string;
   cost: number;
   price: number;
-  imageUrl: string;
+  imageUrl?: string;
   supplier?: string;
   stockDepot: number;
   stockGondola: number;

@@ -58,6 +58,11 @@ export const useStore = () => {
     return saved ? JSON.parse(saved) : [];
   });
 
+  const [users, setUsers] = useState<User[]>(() => {
+    const saved = localStorage.getItem('erp_users');
+    return saved ? JSON.parse(saved) : INITIAL_USERS;
+  });
+
   // --- PERSISTENCE ---
   useEffect(() => {
     if (currentUser) {
@@ -76,11 +81,12 @@ export const useStore = () => {
   useEffect(() => { localStorage.setItem('erp_egresos', JSON.stringify(egresos)); }, [egresos]);
   useEffect(() => { localStorage.setItem('erp_restocking', JSON.stringify(restocking)); }, [restocking]);
   useEffect(() => { localStorage.setItem('erp_audit_logs', JSON.stringify(auditLogs)); }, [auditLogs]);
+  useEffect(() => { localStorage.setItem('erp_users', JSON.stringify(users)); }, [users]);
 
   // --- ACTIONS ---
 
   const login = (username: string, pass: string): boolean => {
-    const user = INITIAL_USERS.find(u => u.username === username && u.password === pass);
+    const user = users.find(u => u.username === username && u.password === pass);
     if (user) {
       setCurrentUser(user);
       return true;
@@ -94,10 +100,12 @@ export const useStore = () => {
 
   const addProduct = (product: Product) => {
     setProducts(prev => [...prev, product]);
+    addAuditLog({ userId: currentUser?.id ?? '', action: 'Crear producto', entityType: 'Product', entityId: product.id, details: { name: product.name } });
   };
 
   const updateProduct = (updatedProduct: Product) => {
     setProducts(prev => prev.map(p => p.id === updatedProduct.id ? updatedProduct : p));
+    addAuditLog({ userId: currentUser?.id ?? '', action: 'Actualizar producto', entityType: 'Product', entityId: updatedProduct.id });
   };
 
   /** Descuenta de stock en góndola (venta). */
@@ -143,6 +151,7 @@ export const useStore = () => {
 
   const addTransaction = (transaction: Transaction) => {
     setTransactions(prev => [transaction, ...prev]);
+    addAuditLog({ userId: currentUser?.id ?? '', action: 'Nueva venta', entityType: 'Transaction', entityId: transaction.id, details: { amount: transaction.amount } });
   };
 
   const addSupplier = (supplier: Supplier) => {
@@ -189,10 +198,26 @@ export const useStore = () => {
 
   const addEgreso = (egreso: Egreso) => {
     setEgresos(prev => [egreso, ...prev]);
+    addAuditLog({ userId: currentUser?.id ?? '', action: 'Registrar egreso', entityType: 'Egreso', entityId: egreso.id, details: { amount: egreso.amount, category: egreso.category } });
   };
 
   const removeEgreso = (id: string) => {
     setEgresos(prev => prev.filter(e => e.id !== id));
+  };
+
+  const addUser = (user: User) => {
+    setUsers(prev => [...prev, user]);
+    addAuditLog({ userId: currentUser?.id ?? '', action: 'Crear usuario', entityType: 'User', entityId: user.id, details: { username: user.username } });
+  };
+
+  const updateUser = (userId: string, updates: Partial<User>) => {
+    setUsers(prev => prev.map(u => u.id === userId ? { ...u, ...updates } : u));
+    addAuditLog({ userId: currentUser?.id ?? '', action: 'Actualizar usuario', entityType: 'User', entityId: userId });
+  };
+
+  const removeUser = (userId: string) => {
+    setUsers(prev => prev.filter(u => u.id !== userId));
+    addAuditLog({ userId: currentUser?.id ?? '', action: 'Eliminar usuario', entityType: 'User', entityId: userId });
   };
 
   return {
@@ -206,6 +231,7 @@ export const useStore = () => {
     egresos,
     restocking,
     auditLogs,
+    users,
     login,
     logout,
     addProduct,
@@ -225,6 +251,9 @@ export const useStore = () => {
     getActivePromotions,
     addEgreso,
     removeEgreso,
-    getBalance
+    getBalance,
+    addUser,
+    updateUser,
+    removeUser,
   };
 };

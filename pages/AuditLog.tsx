@@ -1,14 +1,18 @@
 import React, { useState, useMemo } from 'react';
-import { FileText, Search } from 'lucide-react';
+import { FileText, Search, Plus } from 'lucide-react';
 import { AuditLog as AuditLogType } from '../types';
 
 interface AuditLogProps {
   auditLogs: AuditLogType[];
   users: { id: string; fullName: string }[];
+  onAddEntry?: (entry: Omit<AuditLogType, 'id' | 'timestamp'>) => void;
+  currentUserId?: string;
 }
 
-export const AuditLog: React.FC<AuditLogProps> = ({ auditLogs, users }) => {
+export const AuditLog: React.FC<AuditLogProps> = ({ auditLogs, users, onAddEntry, currentUserId }) => {
   const [search, setSearch] = useState('');
+  const [showForm, setShowForm] = useState(false);
+  const [form, setForm] = useState({ action: '', entityType: '', entityId: '' });
 
   const filtered = useMemo(() => {
     const q = search.toLowerCase();
@@ -26,10 +30,84 @@ export const AuditLog: React.FC<AuditLogProps> = ({ auditLogs, users }) => {
 
   return (
     <div className="p-6 flex flex-col h-full bg-gray-50 overflow-auto">
-      <div className="flex items-center gap-3 mb-6">
-        <FileText className="text-blue-600" size={32} />
-        <h1 className="text-3xl font-bold text-gray-800">Registro de Auditoría</h1>
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center gap-3">
+          <FileText className="text-blue-600" size={32} />
+          <h1 className="text-3xl font-bold text-gray-800">Registro de Auditoría</h1>
+        </div>
+        {onAddEntry && currentUserId && (
+          <button
+            onClick={() => setShowForm(true)}
+            className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-xl hover:bg-blue-700 font-medium"
+          >
+            <Plus size={18} />
+            Registrar evento
+          </button>
+        )}
       </div>
+
+      {showForm && onAddEntry && currentUserId && (
+        <div className="bg-white rounded-xl border border-gray-200 p-4 mb-4">
+          <h3 className="font-semibold text-gray-800 mb-3">Nuevo evento de auditoría</h3>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-3">
+            <div>
+              <label className="block text-xs font-medium text-gray-600 mb-1">Acción</label>
+              <input
+                type="text"
+                className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm"
+                placeholder="Ej: Cambio de precio"
+                value={form.action}
+                onChange={e => setForm(f => ({ ...f, action: e.target.value }))}
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-gray-600 mb-1">Tipo de entidad</label>
+              <input
+                type="text"
+                className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm"
+                placeholder="Ej: Producto, Venta"
+                value={form.entityType}
+                onChange={e => setForm(f => ({ ...f, entityType: e.target.value }))}
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-gray-600 mb-1">ID entidad</label>
+              <input
+                type="text"
+                className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm"
+                placeholder="Ej: 123"
+                value={form.entityId}
+                onChange={e => setForm(f => ({ ...f, entityId: e.target.value }))}
+              />
+            </div>
+          </div>
+          <div className="flex gap-2">
+            <button
+              onClick={() => {
+                if (form.action.trim() && form.entityType.trim() && form.entityId.trim()) {
+                  onAddEntry({
+                    userId: currentUserId,
+                    action: form.action.trim(),
+                    entityType: form.entityType.trim(),
+                    entityId: form.entityId.trim(),
+                  });
+                  setForm({ action: '', entityType: '', entityId: '' });
+                  setShowForm(false);
+                }
+              }}
+              className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700"
+            >
+              Guardar
+            </button>
+            <button
+              onClick={() => { setShowForm(false); setForm({ action: '', entityType: '', entityId: '' }); }}
+              className="px-4 py-2 border border-gray-200 rounded-lg text-sm hover:bg-gray-50"
+            >
+              Cancelar
+            </button>
+          </div>
+        </div>
+      )}
 
       <div className="mb-4">
         <div className="relative max-w-md">
