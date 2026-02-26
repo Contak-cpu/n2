@@ -75,3 +75,50 @@ export interface Client {
   cuit: string;
   type: 'CONSUMIDOR_FINAL' | 'RESPONSABLE_INSCRIPTO';
 }
+
+// --- EXTENDED TYPES FOR SUPERMARKET SYSTEM ---
+
+export interface CheckoutLine {
+  id: string;
+  name: string;
+  cashierId?: string;
+  status: 'OPEN' | 'CLOSED' | 'SUSPENDED';
+  openedAt?: Date;
+  closedAt?: Date;
+  totalSales: number;
+  transactionCount: number;
+}
+
+export interface Promotion {
+  id: string;
+  name: string;
+  description: string;
+  type: 'PERCENTAGE' | 'FIXED_AMOUNT' | 'BUY_X_GET_Y';
+  productIds: string[];
+  discount: number;
+  validFrom: Date;
+  validTo: Date;
+  active: boolean;
+  usageCount?: number;
+}
+
+export interface Restocking {
+  id: string;
+  productId: string;
+  quantity: number;
+  from: 'DEPOT' | 'EXTERIOR';
+  to: 'GONDOLA' | 'DEPOT';
+  repostorId: string;
+  timestamp: Date;
+  notes?: string;
+}
+
+export interface AuditLog {
+  id: string;
+  userId: string;
+  action: string;
+  entityType: string;
+  entityId: string;
+  timestamp: Date;
+  details?: any;
+}

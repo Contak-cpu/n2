@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import { Product, Transaction, TransactionType, User, Supplier, Client } from '../types';
-import { INITIAL_PRODUCTS, INITIAL_USERS, INITIAL_SUPPLIERS, INITIAL_CLIENTS } from '../constants';
+import { Product, Transaction, TransactionType, User, Supplier, Client, CheckoutLine, Promotion } from '../types';
+import { INITIAL_PRODUCTS, INITIAL_USERS, INITIAL_SUPPLIERS, INITIAL_CLIENTS, INITIAL_CHECKOUT_LINES, INITIAL_PROMOTIONS } from '../constants';
 
 export const useStore = () => {
   // --- AUTH STATE ---
@@ -30,6 +30,16 @@ export const useStore = () => {
     return saved ? JSON.parse(saved) : INITIAL_CLIENTS;
   });
 
+  const [checkoutLines, setCheckoutLines] = useState<CheckoutLine[]>(() => {
+    const saved = localStorage.getItem('erp_checkout_lines');
+    return saved ? JSON.parse(saved) : INITIAL_CHECKOUT_LINES;
+  });
+
+  const [promotions, setPromotions] = useState<Promotion[]>(() => {
+    const saved = localStorage.getItem('erp_promotions');
+    return saved ? JSON.parse(saved) : INITIAL_PROMOTIONS;
+  });
+
   // --- PERSISTENCE ---
   useEffect(() => {
     if (currentUser) {
@@ -43,6 +53,8 @@ export const useStore = () => {
   useEffect(() => { localStorage.setItem('erp_transactions', JSON.stringify(transactions)); }, [transactions]);
   useEffect(() => { localStorage.setItem('erp_suppliers', JSON.stringify(suppliers)); }, [suppliers]);
   useEffect(() => { localStorage.setItem('erp_clients', JSON.stringify(clients)); }, [clients]);
+  useEffect(() => { localStorage.setItem('erp_checkout_lines', JSON.stringify(checkoutLines)); }, [checkoutLines]);
+  useEffect(() => { localStorage.setItem('erp_promotions', JSON.stringify(promotions)); }, [promotions]);
 
   // --- ACTIONS ---
 
@@ -99,12 +111,38 @@ export const useStore = () => {
     }, 0);
   };
 
+  const openCheckoutLine = (lineId: string, cashierId: string) => {
+    setCheckoutLines(prev => prev.map(l => l.id === lineId ? { ...l, status: 'OPEN', cashierId, openedAt: new Date() } : l));
+  };
+
+  const closeCheckoutLine = (lineId: string) => {
+    setCheckoutLines(prev => prev.map(l => l.id === lineId ? { ...l, status: 'CLOSED', closedAt: new Date() } : l));
+  };
+
+  const updateCheckoutLine = (lineId: string, updates: Partial<CheckoutLine>) => {
+    setCheckoutLines(prev => prev.map(l => l.id === lineId ? { ...l, ...updates } : l));
+  };
+
+  const addPromotion = (promotion: Promotion) => {
+    setPromotions(prev => [...prev, promotion]);
+  };
+
+  const updatePromotion = (promotionId: string, updates: Partial<Promotion>) => {
+    setPromotions(prev => prev.map(p => p.id === promotionId ? { ...p, ...updates } : p));
+  };
+
+  const getActivePromotions = () => {
+    return promotions.filter(p => p.active && new Date(p.validFrom) <= new Date() && new Date() <= new Date(p.validTo));
+  };
+
   return {
     currentUser,
     products,
     transactions,
     suppliers,
     clients,
+    checkoutLines,
+    promotions,
     login,
     logout,
     addProduct,
@@ -114,6 +152,12 @@ export const useStore = () => {
     addSupplier,
     removeSupplier,
     addClient,
+    openCheckoutLine,
+    closeCheckoutLine,
+    updateCheckoutLine,
+    addPromotion,
+    updatePromotion,
+    getActivePromotions,
     getBalance
   };
 };
