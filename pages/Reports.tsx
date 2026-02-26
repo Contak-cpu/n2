@@ -90,14 +90,14 @@ export const Reports: React.FC<ReportsProps> = ({ transactions, products, curren
   }, [transactions, products]);
 
   return (
-    <div className="p-6 flex flex-col h-full bg-gray-50 overflow-auto">
-      <div className="flex items-center gap-3 mb-6">
-        <BarChart3 className="text-blue-600" size={32} />
-        <h1 className="text-3xl font-bold text-gray-800">Reportes y Estadísticas</h1>
+    <div className="p-4 sm:p-6 flex flex-col h-full bg-gray-50 overflow-auto">
+      <div className="flex items-center gap-2 sm:gap-3 mb-4 sm:mb-6">
+        <BarChart3 className="text-blue-600 flex-shrink-0" size={28} />
+        <h1 className="text-xl sm:text-3xl font-bold text-gray-800">Reportes y Estadísticas</h1>
       </div>
 
       {/* KPI Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-4 sm:mb-6">
         <StatCard
           label="Ventas Hoy"
           value={`$${stats.totalSales.toLocaleString()}`}

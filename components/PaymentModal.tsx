@@ -43,8 +43,8 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({ total, onClose, onCo
   }
 
   return (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl w-full max-w-2xl overflow-hidden shadow-2xl flex flex-col max-h-[90vh]">
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
+      <div className="bg-white rounded-t-2xl sm:rounded-2xl w-full max-w-2xl overflow-hidden shadow-2xl flex flex-col max-h-[90vh] pb-[env(safe-area-inset-bottom)]">
         <div className="p-6 border-b border-gray-100 flex justify-between items-center bg-gray-50">
           <h2 className="text-xl font-bold text-gray-800">Seleccionar método de pago</h2>
           <button onClick={onClose} className="text-gray-400 hover:text-gray-600 bg-white p-2 rounded-full shadow-sm">
@@ -59,7 +59,7 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({ total, onClose, onCo
           </div>
 
           {!selectedMethod ? (
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-2 gap-3 sm:gap-4">
               {[
                 { id: PaymentMethod.CASH, icon: Banknote, label: 'Efectivo', color: 'bg-green-50 text-green-700 border-green-200' },
                 { id: PaymentMethod.MERCADOPAGO, icon: QrCode, label: 'MercadoPago', color: 'bg-blue-50 text-blue-500 border-blue-200' },
@@ -69,10 +69,10 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({ total, onClose, onCo
                 <button
                   key={m.id}
                   onClick={() => setSelectedMethod(m.id)}
-                  className={`flex flex-col items-center justify-center p-6 rounded-xl border-2 transition-all hover:scale-105 ${m.color} hover:shadow-lg`}
+                  className={`flex flex-col items-center justify-center p-4 sm:p-6 rounded-xl border-2 transition-all hover:scale-105 active:scale-[0.98] ${m.color} hover:shadow-lg touch-target`}
                 >
-                  <m.icon size={40} className="mb-3" />
-                  <span className="font-bold text-lg">{m.label}</span>
+                  <m.icon size={32} className="mb-2 sm:mb-3 sm:w-10 sm:h-10" />
+                  <span className="font-bold text-sm sm:text-lg">{m.label}</span>
                 </button>
               ))}
             </div>

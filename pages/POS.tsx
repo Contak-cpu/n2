@@ -187,37 +187,38 @@ export const POS: React.FC<POSProps> = ({
   }, [isCashier, currentUser, checkoutLines, selectedLineId]);
 
   return (
-    <div className="flex flex-col lg:flex-row h-full overflow-hidden">
-      {/* Left: Líneas de caja - colapsable */}
+    <div className="flex flex-col lg:flex-row h-full overflow-hidden min-h-0">
+      {/* Left: Líneas de caja - en móvil barra horizontal, en desktop columna */}
       {showCajasPanel ? (
-        <div className="w-full lg:w-56 xl:w-64 flex-shrink-0 border-r border-gray-200 bg-gray-50/50 flex flex-col">
-          <div className="p-3 border-b border-gray-200 flex items-center justify-between flex-shrink-0">
-            <h3 className="font-bold text-gray-800 flex items-center gap-2">
+        <div className="w-full lg:w-56 xl:w-64 flex-shrink-0 border-b lg:border-b-0 lg:border-r border-gray-200 bg-gray-50/50 flex flex-col">
+          <div className="p-2 sm:p-3 border-b border-gray-200 flex items-center justify-between flex-shrink-0">
+            <h3 className="font-bold text-gray-800 text-sm sm:text-base flex items-center gap-2">
               <LayoutGrid size={18} className="text-blue-600" />
               {isCashier ? 'Mi caja' : 'Cajas'}
             </h3>
             <button
               type="button"
               onClick={() => setShowCajasPanel(false)}
-              className="p-1.5 rounded-lg text-gray-500 hover:bg-gray-200 hover:text-gray-700 lg:block hidden"
+              className="p-2 rounded-lg text-gray-500 hover:bg-gray-200 hover:text-gray-700 lg:block hidden"
               title="Comprimir panel"
             >
               <ChevronLeft size={18} />
             </button>
           </div>
-          <div className="flex-1 overflow-y-auto p-3 grid grid-cols-2 lg:grid-cols-1 gap-2">
+          <div className="flex-1 overflow-x-auto lg:overflow-y-auto overflow-y-hidden p-2 lg:p-3 flex lg:grid grid-cols-1 gap-2 flex-row lg:flex-col" style={{ minHeight: '72px' }}>
             {visibleLines.map(line => (
-              <CheckoutLineCard
-                key={line.id}
-                line={line}
-                cashierName={line.cashierId ? getCashierName(line.cashierId) : undefined}
-                isSelected={selectedLineId === line.id}
-                onClick={() => setSelectedLineId(line.id)}
-                onOpen={currentUser ? (id) => openCheckoutLine?.(id, currentUser.id) : undefined}
-                onClose={closeCheckoutLine}
-                currentUserId={currentUser?.id}
-                hideStats={isCashier && line.status === 'CLOSED'}
-              />
+              <div key={line.id} className="flex-shrink-0 w-[140px] sm:w-[160px] lg:w-full">
+                <CheckoutLineCard
+                  line={line}
+                  cashierName={line.cashierId ? getCashierName(line.cashierId) : undefined}
+                  isSelected={selectedLineId === line.id}
+                  onClick={() => setSelectedLineId(line.id)}
+                  onOpen={currentUser ? (id) => openCheckoutLine?.(id, currentUser.id) : undefined}
+                  onClose={closeCheckoutLine}
+                  currentUserId={currentUser?.id}
+                  hideStats={isCashier && line.status === 'CLOSED'}
+                />
+              </div>
             ))}
           </div>
         </div>
@@ -237,24 +238,23 @@ export const POS: React.FC<POSProps> = ({
 
       {/* Center: Product Catalog + Cart */}
       <div className="flex-1 flex flex-col lg:flex-row h-full overflow-hidden min-w-0">
-        <div className="flex-1 min-w-0 p-4 lg:p-6 flex flex-col overflow-hidden">
-        <div className="flex flex-col sm:flex-row gap-3 mb-4">
+        <div className="flex-1 min-w-0 p-3 sm:p-4 lg:p-6 flex flex-col overflow-hidden min-h-0">
+        <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 mb-3 sm:mb-4 flex-shrink-0">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
             <input
               type="text"
               placeholder="Buscar por nombre, SKU o código..."
-              className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-500 focus:outline-none shadow-sm"
+              className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-500 focus:outline-none shadow-sm text-base"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              autoFocus
             />
           </div>
           {features.escanerPOS && (
             <button
               type="button"
               onClick={() => setScannerOpen(true)}
-              className="flex items-center justify-center gap-2 px-4 py-3 rounded-xl border-2 border-blue-200 bg-blue-50 text-blue-700 font-medium hover:bg-blue-100 transition-colors"
+              className="flex items-center justify-center gap-2 px-4 py-3 rounded-xl border-2 border-blue-400 bg-blue-500 text-white font-semibold hover:bg-blue-600 transition-colors touch-target"
             >
               <Camera size={20} />
               Escanear
@@ -262,7 +262,7 @@ export const POS: React.FC<POSProps> = ({
           )}
         </div>
 
-        <div className="flex-1 overflow-y-auto grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4 pb-4 content-start">
+        <div className="flex-1 overflow-y-auto grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-2 sm:gap-4 pb-4 content-start">
           {filteredProducts.map(product => {
             const price = product.price;
             const isLowStock = product.stockGondola < 10;
@@ -271,12 +271,11 @@ export const POS: React.FC<POSProps> = ({
                 key={product.id}
                 onClick={() => addToCart(product)}
                 disabled={product.stockGondola <= 0}
-                style={{ minHeight: '200px' }}
-                className={`bg-white p-4 rounded-xl border shadow-sm hover:shadow-md transition-all text-left flex flex-col justify-between relative group ${
-                  product.stockGondola <= 0 ? 'opacity-50 cursor-not-allowed' : 'hover:border-blue-400'
+                className={`bg-white p-3 sm:p-4 rounded-xl border shadow-sm hover:shadow-md transition-all text-left flex flex-col justify-between relative group min-h-[180px] sm:min-h-[200px] touch-target ${
+                  product.stockGondola <= 0 ? 'opacity-50 cursor-not-allowed' : 'hover:border-blue-400 active:bg-gray-50'
                 } ${isLowStock ? 'border-red-100' : 'border-gray-100'}`}
               >
-                <div className="w-full h-32 mb-3 rounded-lg overflow-hidden relative">
+                <div className="w-full h-24 sm:h-32 mb-2 sm:mb-3 rounded-lg overflow-hidden relative">
                   <ProductIcon category={product.category} size="md" className="w-full h-full rounded-lg" />
                 </div>
 
@@ -310,9 +309,9 @@ export const POS: React.FC<POSProps> = ({
         </div>
         </div>
 
-        {/* Carrito */}
-        <div className="w-full lg:w-96 flex-shrink-0 bg-white border-t lg:border-t-0 lg:border-l border-gray-200 flex flex-col h-[45vh] lg:h-full shadow-lg mt-4 lg:mt-0">
-          <div className="p-4 border-b border-gray-100 bg-gray-50/50">
+        {/* Carrito: en móvil altura fija abajo con safe-area */}
+        <div className="w-full lg:w-96 flex-shrink-0 bg-white border-t lg:border-t-0 lg:border-l border-gray-200 flex flex-col h-[42vh] min-h-[280px] lg:h-full lg:min-h-0 shadow-lg mt-3 lg:mt-0 pb-[env(safe-area-inset-bottom)] lg:pb-0">
+          <div className="p-3 sm:p-4 border-b border-gray-100 bg-gray-50/50 flex-shrink-0">
             <div className="flex justify-between items-center mb-3">
               <h2 className="text-lg font-bold text-gray-800 flex items-center gap-2">
                 <ShoppingBag className="text-blue-600" />
@@ -395,8 +394,8 @@ export const POS: React.FC<POSProps> = ({
           )}
         </div>
 
-        <div className="p-6 bg-white border-t border-gray-200">
-          <div className="space-y-2 mb-4">
+        <div className="p-4 sm:p-6 bg-white border-t border-gray-200 flex-shrink-0">
+          <div className="space-y-2 mb-3 sm:mb-4">
             <div className="flex justify-between text-sm">
               <span className="text-gray-500">Subtotal</span>
               <span className="font-medium text-gray-700">${subtotal.toLocaleString()}</span>
@@ -418,13 +417,13 @@ export const POS: React.FC<POSProps> = ({
           <button
             onClick={() => setPaymentModalOpen(true)}
             disabled={cart.length === 0}
-            className={`w-full py-4 rounded-xl flex items-center justify-center gap-2 font-bold text-lg transition-all transform active:scale-95 ${
+            className={`w-full py-3.5 sm:py-4 rounded-xl flex items-center justify-center gap-2 font-bold text-base sm:text-lg transition-all transform active:scale-[0.98] touch-target ${
               cart.length === 0
                 ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
                 : 'bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-lg hover:shadow-blue-500/30 hover:from-blue-500 hover:to-blue-600'
             }`}
           >
-            <CreditCard size={24} />
+            <CreditCard size={22} className="sm:w-6 sm:h-6" />
             COBRAR
           </button>
         </div>

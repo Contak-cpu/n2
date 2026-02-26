@@ -245,25 +245,38 @@ export const BarcodeScannerModal: React.FC<BarcodeScannerModalProps> = ({
       <div className="bg-gray-900 p-4 space-y-3">
         {/* Producto encontrado: confirmar */}
         {status === 'found' && foundProduct && (
-          <div className="bg-gray-800 rounded-xl p-3 flex items-center gap-3">
-            <div className="w-12 h-12 rounded-lg overflow-hidden flex-shrink-0">
-              <ProductIcon category={foundProduct.category} size="md" className="w-full h-full" />
+          <div className="bg-gray-800 rounded-xl p-3 flex flex-col sm:flex-row sm:items-center gap-3">
+            <div className="flex items-center gap-3 flex-1 min-w-0">
+              <div className="w-12 h-12 rounded-lg overflow-hidden flex-shrink-0">
+                <ProductIcon category={foundProduct.category} size="md" className="w-full h-full" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-white font-semibold text-sm truncate">{foundProduct.name}</p>
+                <p className="text-gray-400 text-xs">{foundProduct.sku}</p>
+                {mode === 'view' ? (
+                  <div className="mt-1.5 flex flex-wrap gap-x-3 gap-y-0.5 text-xs">
+                    <span className="text-amber-300">Depósito: <strong>{foundProduct.stockDepot}</strong> un.</span>
+                    <span className="text-emerald-300">Góndola: <strong>{foundProduct.stockGondola}</strong> un.</span>
+                    <span className="text-gray-400">Total: <strong>{foundProduct.stockDepot + foundProduct.stockGondola}</strong> un.</span>
+                    {foundProduct.stockGondola < 5 && <span className="text-red-400 font-bold">Crítico</span>}
+                    {foundProduct.stockGondola >= 5 && foundProduct.stockGondola < 10 && <span className="text-orange-400 font-medium">Bajo</span>}
+                  </div>
+                ) : (
+                  <p className="text-gray-400 text-xs">Góndola: {foundProduct.stockGondola} un.</p>
+                )}
+                {mode === 'add' && <p className="text-blue-400 font-bold text-sm mt-0.5">${foundProduct.price.toLocaleString()}</p>}
+              </div>
             </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-white font-semibold text-sm truncate">{foundProduct.name}</p>
-              <p className="text-gray-400 text-xs">{foundProduct.sku} · Góndola: {foundProduct.stockGondola}</p>
-              <p className="text-blue-400 font-bold">${foundProduct.price.toLocaleString()}</p>
-            </div>
-            <div className="flex flex-col gap-2">
+            <div className="flex flex-row sm:flex-col gap-2 flex-shrink-0">
               <button
                 onClick={handleConfirm}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-bold hover:bg-blue-500 transition-colors"
+                className="flex-1 sm:flex-none px-4 py-3 sm:py-2 bg-blue-600 text-white rounded-lg text-sm font-bold hover:bg-blue-500 transition-colors touch-target"
               >
-                {mode === 'add' ? 'Agregar' : 'Ver'}
+                {mode === 'add' ? 'Agregar' : 'Ver / Reponer'}
               </button>
               <button
                 onClick={() => { setStatus('scanning'); setLastScanned(null); }}
-                className="px-4 py-2 bg-gray-700 text-gray-300 rounded-lg text-sm hover:bg-gray-600 transition-colors"
+                className="px-4 py-3 sm:py-2 bg-gray-700 text-gray-300 rounded-lg text-sm hover:bg-gray-600 transition-colors"
               >
                 Cancelar
               </button>

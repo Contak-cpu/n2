@@ -29,15 +29,15 @@ export const Finance: React.FC<FinanceProps> = ({ transactions, currentBalance, 
   };
 
   return (
-    <div className="p-6 max-w-7xl mx-auto space-y-8">
+    <div className="p-4 sm:p-6 max-w-7xl mx-auto space-y-6 sm:space-y-8">
       {/* Header Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="bg-slate-900 text-white p-6 rounded-2xl shadow-lg relative overflow-hidden">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6">
+        <div className="bg-slate-900 text-white p-4 sm:p-6 rounded-2xl shadow-lg relative overflow-hidden">
           <div className="absolute right-0 top-0 opacity-10 transform translate-x-2 -translate-y-2">
-             <Wallet size={120} />
+             <Wallet size={100} className="sm:w-[120px] sm:h-[120px]" />
           </div>
-          <p className="text-slate-400 font-medium mb-1">Saldo Actual en Caja</p>
-          <h2 className="text-4xl font-bold">${currentBalance.toLocaleString()}</h2>
+          <p className="text-slate-400 font-medium mb-1 text-sm">Saldo Actual en Caja</p>
+          <h2 className="text-2xl sm:text-4xl font-bold">${currentBalance.toLocaleString()}</h2>
           <div className="mt-4 flex items-center text-sm text-green-400">
              <span className="w-2 h-2 rounded-full bg-green-500 mr-2 animate-pulse"></span>
              Caja Abierta
@@ -68,11 +68,11 @@ export const Finance: React.FC<FinanceProps> = ({ transactions, currentBalance, 
       </div>
 
       {/* Main Content */}
-      <div className="flex justify-between items-center">
-        <h2 className="text-xl font-bold text-gray-800">Movimientos de Caja</h2>
+      <div className="flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-3">
+        <h2 className="text-lg sm:text-xl font-bold text-gray-800">Movimientos de Caja</h2>
         <button 
           onClick={() => setShowExpenseModal(true)}
-          className="bg-red-50 text-red-600 border border-red-200 hover:bg-red-100 px-4 py-2 rounded-lg font-medium flex items-center gap-2 transition-colors"
+          className="bg-red-50 text-red-600 border border-red-200 hover:bg-red-100 px-4 py-3 rounded-lg font-medium flex items-center justify-center gap-2 transition-colors touch-target"
         >
           <PlusCircle size={18} />
           Registrar Egreso

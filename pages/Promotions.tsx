@@ -67,7 +67,7 @@ export const Promotions: React.FC<PromotionsProps> = ({ promotions, onAdd, onUpd
   };
 
   return (
-    <div className="p-6 flex flex-col h-full bg-gray-50">
+    <div className="p-4 sm:p-6 flex flex-col h-full bg-gray-50 overflow-auto">
       <div className="flex justify-between items-center mb-6">
         <div className="flex items-center gap-3">
           <Gift className="text-purple-600" size={28} />

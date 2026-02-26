@@ -100,7 +100,7 @@ export const Users: React.FC<UsersProps> = ({ users, onAdd, onUpdate, onRemove, 
   };
 
   return (
-    <div className="p-6 flex flex-col h-full bg-gray-50 overflow-auto">
+    <div className="p-4 sm:p-6 flex flex-col h-full bg-gray-50 overflow-auto">
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-3">
           <UserIcon className="text-blue-600" size={32} />

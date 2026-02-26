@@ -26,19 +26,19 @@ export const Cajas: React.FC<CajasProps> = ({
   const abiertas = checkoutLines.filter(l => l.status === 'OPEN').length;
 
   return (
-    <div className="p-6 flex flex-col h-full bg-gray-50 overflow-auto">
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center gap-3">
-          <LayoutGrid className="text-blue-600" size={32} />
-          <div>
-            <h1 className="text-3xl font-bold text-gray-800">Cajas</h1>
+    <div className="p-4 sm:p-6 flex flex-col h-full bg-gray-50 overflow-auto">
+      <div className="flex items-center justify-between mb-4 sm:mb-6">
+        <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+          <LayoutGrid className="text-blue-600 flex-shrink-0" size={28} />
+          <div className="min-w-0">
+            <h1 className="text-xl sm:text-3xl font-bold text-gray-800">Cajas</h1>
             <p className="text-sm text-gray-500">Abrir, cerrar y ver estado de las líneas de cobro</p>
           </div>
         </div>
       </div>
 
       {/* Resumen rápido */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 mb-4 sm:mb-6">
         <div className="bg-white rounded-xl p-4 border border-gray-100 shadow-sm">
           <p className="text-xs text-gray-500 uppercase font-medium">Cajas abiertas</p>
           <p className="text-2xl font-bold text-green-700">{abiertas} / {checkoutLines.length}</p>
@@ -59,7 +59,7 @@ export const Cajas: React.FC<CajasProps> = ({
           <BarChart3 size={20} className="text-blue-600" />
           Líneas de caja
         </h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4">
           {checkoutLines.map(line => (
             <CheckoutLineCard
               key={line.id}

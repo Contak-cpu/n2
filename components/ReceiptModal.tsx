@@ -14,9 +14,9 @@ export const ReceiptModal: React.FC<ReceiptModalProps> = ({ transaction, onClose
   };
 
   return (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
       {/* Screen View */}
-      <div className="bg-white rounded-lg shadow-2xl w-full max-w-sm overflow-hidden flex flex-col max-h-[90vh]">
+      <div className="bg-white rounded-t-2xl sm:rounded-lg shadow-2xl w-full max-w-sm overflow-hidden flex flex-col max-h-[90vh] pb-[env(safe-area-inset-bottom)]">
         <div className="p-4 border-b border-gray-100 flex justify-between items-center bg-gray-50">
           <h2 className="text-lg font-bold text-gray-800">Comprobante</h2>
           <div className="flex gap-2">

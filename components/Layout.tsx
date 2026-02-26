@@ -130,7 +130,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, activeTab, onTabChange
       </nav>
 
       {/* Main Content */}
-      <main className="flex-1 overflow-auto h-screen relative">
+      <main className="flex-1 overflow-auto h-screen relative min-h-0 pb-[env(safe-area-inset-bottom)]">
         {children}
       </main>
     </div>
