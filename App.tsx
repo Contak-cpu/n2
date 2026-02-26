@@ -6,6 +6,7 @@ import { Finance } from './pages/Finance';
 import { Login } from './pages/Login';
 import { Suppliers } from './pages/Suppliers';
 import { Promotions } from './pages/Promotions';
+import { Reports } from './pages/Reports';
 import { useStore } from './hooks/useStore';
 import { TransactionType, CartItem, Client, Transaction } from './types';
 
@@ -85,6 +86,14 @@ const App: React.FC = () => {
           promotions={store.promotions}
           onAdd={store.addPromotion}
           onUpdate={store.updatePromotion}
+        />
+      )}
+
+      {activeTab === 'reports' && store.currentUser.role === 'ADMIN' && (
+        <Reports
+          transactions={store.transactions}
+          products={store.products}
+          currentBalance={store.getBalance()}
         />
       )}
     </Layout>
