@@ -185,6 +185,25 @@ export const useStore = () => {
     setCheckoutLines(prev => prev.map(l => l.id === lineId ? { ...l, ...updates } : l));
   };
 
+  /** Líneas de caja con totalSales y transactionCount calculados desde transacciones. */
+  const getCheckoutLinesWithStats = (): CheckoutLine[] => {
+    const byLine = transactions
+      .filter(t => t.type === TransactionType.INCOME && t.lineId)
+      .reduce((acc, t) => {
+        const id = t.lineId!;
+        if (!acc[id]) acc[id] = { totalSales: 0, transactionCount: 0 };
+        acc[id].totalSales += t.amount ?? 0;
+        acc[id].transactionCount += 1;
+        return acc;
+      }, {} as Record<string, { totalSales: number; transactionCount: number }>);
+
+    return checkoutLines.map(line => ({
+      ...line,
+      totalSales: byLine[line.id]?.totalSales ?? 0,
+      transactionCount: byLine[line.id]?.transactionCount ?? 0,
+    }));
+  };
+
   const addPromotion = (promotion: Promotion) => {
     setPromotions(prev => [...prev, promotion]);
   };
@@ -228,6 +247,7 @@ export const useStore = () => {
     suppliers,
     clients,
     checkoutLines,
+    getCheckoutLinesWithStats,
     promotions,
     egresos,
     restocking,

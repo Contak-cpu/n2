@@ -69,7 +69,7 @@ const App: React.FC = () => {
     store.addTransaction(newTransaction);
     store.updateStock(cart.map(item => ({ id: item.id, quantity: item.quantity })));
     if (lineId) {
-      const line = store.checkoutLines.find(l => l.id === lineId);
+      const line = store.getCheckoutLinesWithStats().find(l => l.id === lineId);
       if (line) {
         store.updateCheckoutLine(lineId, {
           totalSales: line.totalSales + total,
@@ -107,7 +107,7 @@ const App: React.FC = () => {
           products={store.products}
           restocking={store.restocking}
           transactions={store.transactions}
-          checkoutLines={store.checkoutLines}
+          checkoutLines={store.getCheckoutLinesWithStats()}
           users={store.users}
           currentBalance={store.getBalance()}
           egresos={store.egresos}
@@ -120,7 +120,7 @@ const App: React.FC = () => {
         <POS
           products={store.products}
           clients={store.clients}
-          checkoutLines={store.checkoutLines}
+          checkoutLines={store.getCheckoutLinesWithStats()}
           users={INITIAL_USERS}
           currentUser={store.currentUser}
           transactions={store.transactions}
@@ -180,7 +180,7 @@ const App: React.FC = () => {
       {/* CAJAS - Admin y Supervisor */}
       {activeTab === 'cajas' && (isAdmin || isSupervisor) && (
         <Cajas
-          checkoutLines={store.checkoutLines}
+          checkoutLines={store.getCheckoutLinesWithStats()}
           users={store.users}
           currentUser={store.currentUser}
           onOpenLine={store.openCheckoutLine}
