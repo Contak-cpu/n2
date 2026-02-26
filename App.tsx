@@ -5,6 +5,7 @@ import { Inventory } from './pages/Inventory';
 import { Finance } from './pages/Finance';
 import { Login } from './pages/Login';
 import { Suppliers } from './pages/Suppliers';
+import { Promotions } from './pages/Promotions';
 import { useStore } from './hooks/useStore';
 import { TransactionType, CartItem, Client, Transaction } from './types';
 
@@ -72,10 +73,18 @@ const App: React.FC = () => {
       )}
 
       {activeTab === 'suppliers' && store.currentUser.role === 'ADMIN' && (
-        <Suppliers 
+        <Suppliers
           suppliers={store.suppliers}
           onAdd={store.addSupplier}
           onRemove={store.removeSupplier}
+        />
+      )}
+
+      {activeTab === 'promotions' && store.currentUser.role === 'ADMIN' && (
+        <Promotions
+          promotions={store.promotions}
+          onAdd={store.addPromotion}
+          onUpdate={store.updatePromotion}
         />
       )}
     </Layout>

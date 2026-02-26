@@ -1,5 +1,5 @@
 import React from 'react';
-import { LayoutDashboard, ShoppingCart, Package, DollarSign, Truck, LogOut, User as UserIcon } from 'lucide-react';
+import { LayoutDashboard, ShoppingCart, Package, DollarSign, Truck, Gift, LogOut, User as UserIcon } from 'lucide-react';
 import { User } from '../types';
 
 interface LayoutProps {
@@ -66,6 +66,16 @@ export const Layout: React.FC<LayoutProps> = ({ children, activeTab, onTabChange
                 >
                   <Truck size={20} />
                   <span className="font-medium">Proveedores</span>
+                </button>
+
+                <button
+                  onClick={() => onTabChange('promotions')}
+                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
+                    activeTab === 'promotions' ? 'bg-blue-600 text-white shadow-lg' : 'text-slate-300 hover:bg-slate-800'
+                  }`}
+                >
+                  <Gift size={20} />
+                  <span className="font-medium">Promociones</span>
                 </button>
               </>
             )}
