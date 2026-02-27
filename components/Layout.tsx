@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import {
   LayoutDashboard, Home, ShoppingCart, Package, DollarSign, Truck,
   Gift, BarChart3, LogOut, User as UserIcon, TrendingDown, ClipboardList,
-  FileText, Users, Settings as SettingsIcon, Menu, X, LayoutGrid, PackageCheck
+  FileText, Users, Settings as SettingsIcon, Menu, X, LayoutGrid, PackageCheck, Store
 } from 'lucide-react';
 import { User, Branch } from '../types';
 import { getFeatureSettings } from '../utils/featureSettings';
@@ -24,6 +24,7 @@ const ROLE_LABELS: Record<string, string> = {
   SUPERVISOR: 'Supervisor',
   CASHIER: 'Cajero/a',
   REPOSITOR: 'Repositor/a',
+  VENDEDOR_CALLE: 'Vendedor a la calle',
 };
 
 export const Layout: React.FC<LayoutProps> = ({
@@ -42,6 +43,7 @@ export const Layout: React.FC<LayoutProps> = ({
   const isAdmin = role === 'ADMIN';
   const isSupervisor = role === 'SUPERVISOR';
   const isRepositor = role === 'REPOSITOR';
+  const isVendedorCalle = role === 'VENDEDOR_CALLE';
   const showBranchSelector = (isAdmin || isSupervisor) && branches.length > 0 && onSelectedBranchChange;
 
   const navBtn = (tab: string, label: string, Icon: React.ElementType) => (
@@ -121,6 +123,9 @@ export const Layout: React.FC<LayoutProps> = ({
 
             {/* REPOSITOR: solo su módulo */}
             {features.moduloRepositor && (isRepositor || isAdmin) && navBtn('repositor', 'Reposición de Stock', ClipboardList)}
+
+            {/* VENDEDORES: panel admin + perfil vendedor */}
+            {(isVendedorCalle || isAdmin) && navBtn('vendedor-calle', 'Vendedores', Store)}
 
             {/* SUPERVISOR y ADMIN */}
             {(isAdmin || isSupervisor) && navBtn('inventory', 'Inventario', Package)}

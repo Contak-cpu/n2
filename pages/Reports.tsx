@@ -29,7 +29,7 @@ interface ReportsProps {
   currentBalance: number;
 }
 
-export const Reports: React.FC<ReportsProps> = ({ transactions, products, egresos, currentBalance }) => {
+const ReportsComponent: React.FC<ReportsProps> = ({ transactions, products, egresos, currentBalance }) => {
   const stats = useMemo(() => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
@@ -340,3 +340,5 @@ export const Reports: React.FC<ReportsProps> = ({ transactions, products, egreso
     </div>
   );
 };
+
+export const Reports = React.memo(ReportsComponent);

@@ -21,7 +21,7 @@ interface POSProps {
   closeCheckoutLine?: (lineId: string) => void;
 }
 
-export const POS: React.FC<POSProps> = ({
+const POSComponent: React.FC<POSProps> = ({
   products,
   clients,
   checkoutLines,
@@ -262,47 +262,53 @@ export const POS: React.FC<POSProps> = ({
           )}
         </div>
 
-        <div className="flex-1 overflow-y-auto overflow-x-hidden grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-2 sm:gap-4 pb-4 pr-1 content-start min-w-0">
+        <div
+          className="flex-1 overflow-y-auto overflow-x-hidden pb-4 pr-1 min-w-0"
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))',
+            gap: 'clamp(0.5rem, 2vw, 1rem)',
+            alignContent: 'start',
+          }}
+        >
           {filteredProducts.map(product => {
             const price = product.price;
             const isLowStock = product.stockGondola < 10;
             return (
               <button
                 key={product.id}
+                type="button"
                 onClick={() => addToCart(product)}
                 disabled={product.stockGondola <= 0}
-                className={`bg-white p-3 sm:p-4 rounded-xl border shadow-sm hover:shadow-md transition-all text-left flex flex-col justify-between relative group min-h-[180px] sm:min-h-[200px] touch-target ${
-                  product.stockGondola <= 0 ? 'opacity-50 cursor-not-allowed' : 'hover:border-blue-400 active:bg-gray-50'
-                } ${isLowStock ? 'border-red-100' : 'border-gray-100'}`}
+                className={`bg-white rounded-xl border shadow-sm hover:shadow-md transition-all text-left flex flex-col relative group min-w-0 w-full overflow-hidden touch-target ${
+                  product.stockGondola <= 0 ? 'opacity-50 cursor-not-allowed' : 'hover:border-blue-400 hover:shadow-blue-100/50 active:bg-slate-50'
+                } ${isLowStock ? 'border-amber-200' : 'border-slate-100'}`}
+                style={{ minHeight: '200px' }}
               >
-                <div className="w-full h-24 sm:h-32 mb-2 sm:mb-3 rounded-lg overflow-hidden relative">
-                  <ProductIcon category={product.category} size="md" className="w-full h-full rounded-lg" />
+                <div className="flex-shrink-0 w-full aspect-square max-h-28 sm:max-h-32 rounded-t-xl overflow-hidden bg-slate-50">
+                  <ProductIcon category={product.category} size="md" className="w-full h-full rounded-t-xl object-cover" />
+                </div>
+
+                <div className="flex flex-col flex-1 p-3 min-w-0">
+                  <h3 className="font-semibold text-slate-800 leading-snug text-sm line-clamp-2 mb-0.5">{product.name}</h3>
+                  <p className="text-[11px] text-slate-400 truncate mb-2">{product.sku}</p>
+
+                  <div className="mt-auto pt-2 border-t border-slate-100 flex items-end justify-between gap-2">
+                    <span className="text-base font-bold text-blue-600 tabular-nums">${price.toLocaleString()}</span>
+                    <span className="text-[11px] text-slate-400 flex-shrink-0">{product.stockGondola} un.</span>
+                  </div>
                 </div>
 
                 {isLowStock && product.stockGondola > 0 && (
-                  <div className="absolute top-2 right-2 bg-red-100 text-red-600 px-2 py-0.5 text-xs font-bold rounded-lg shadow-sm">
-                    Stock Bajo
-                  </div>
+                  <span className="absolute top-1.5 right-1.5 bg-amber-100 text-amber-800 px-1.5 py-0.5 text-[10px] font-semibold rounded-md shadow-sm">
+                    Bajo
+                  </span>
                 )}
                 {product.stockGondola <= 0 && (
-                  <div className="absolute inset-0 bg-gray-100/60 flex items-center justify-center backdrop-blur-[1px] z-10">
-                    <span className="bg-gray-800 text-white px-3 py-1 rounded text-sm font-bold transform -rotate-12 shadow-xl">AGOTADO</span>
+                  <div className="absolute inset-0 bg-slate-100/80 flex items-center justify-center z-10">
+                    <span className="bg-slate-700 text-white px-2 py-1 rounded text-xs font-bold shadow-lg">AGOTADO</span>
                   </div>
                 )}
-                
-                <div className="flex-1">
-                  <h3 className="font-semibold text-gray-800 leading-tight mb-1 text-sm line-clamp-2">{product.name}</h3>
-                  <p className="text-xs text-gray-500 mb-2">{product.sku}</p>
-                </div>
-                
-                <div className="mt-2 pt-2 border-t border-gray-50">
-                  <div className="flex items-baseline justify-between">
-                    <span className="text-lg font-bold text-blue-700">
-                      ${price.toLocaleString()}
-                    </span>
-                    <span className="text-xs text-gray-400">{product.stockGondola} un.</span>
-                  </div>
-                </div>
               </button>
             );
           })}
@@ -506,3 +512,5 @@ export const POS: React.FC<POSProps> = ({
     </div>
   );
 };
+
+export const POS = React.memo(POSComponent);

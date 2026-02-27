@@ -68,7 +68,10 @@ export interface DashboardStats {
 
 // --- NEW TYPES FOR SCALABILITY ---
 
-export type UserRole = 'ADMIN' | 'CASHIER' | 'SUPERVISOR' | 'REPOSITOR';
+export type UserRole = 'ADMIN' | 'CASHIER' | 'SUPERVISOR' | 'REPOSITOR' | 'VENDEDOR_CALLE';
+
+/** 0 = Domingo, 1 = Lunes, ..., 6 = Sábado. Solo para VENDEDOR_CALLE. */
+export type WorkingDay = 0 | 1 | 2 | 3 | 4 | 5 | 6;
 
 export interface User {
   id: string;
@@ -80,6 +83,8 @@ export interface User {
   phone?: string;
   active: boolean;
   lastLogin?: Date;
+  /** Días que trabaja (0=Dom ... 6=Sab). Solo usado para vendedores. */
+  workingDays?: WorkingDay[];
 }
 
 export interface Supplier {
@@ -95,6 +100,9 @@ export interface Client {
   name: string;
   cuit: string;
   type: 'CONSUMIDOR_FINAL' | 'RESPONSABLE_INSCRIPTO';
+  /** Opcional: dirección del comercio para vendedores a la calle */
+  address?: string;
+  phone?: string;
 }
 
 // --- EXTENDED TYPES FOR SUPERMARKET SYSTEM ---
@@ -189,4 +197,86 @@ export interface Despacho {
   estado: DespachoEstado;
   observaciones?: string;
   transactionId?: string;
+}
+
+// --- VENDEDORES A LA CALLE ---
+
+export type VentaCalleStatus =
+  | 'BORRADOR'      // recién creada, editable
+  | 'CONFIRMADA'    // confirmada, se pueden generar remito y órdenes
+  | 'EN_PREPARACION'// sucursal preparando
+  | 'RETIRADA'      // vendedor retiró la mercadería
+  | 'ENTREGADA';    // entregada al cliente
+
+export interface VentaCalleItem {
+  productId: string;
+  name: string;
+  sku: string;
+  quantity: number;
+  unitPrice: number;
+  subtotal: number;
+}
+
+export interface VentaCalle {
+  id: string;
+  date: string;
+  /** Vendedor que realizó la venta */
+  sellerId: string;
+  sellerName: string;
+  /** Comercio/cliente */
+  clientId: string;
+  clientName: string;
+  clientAddress?: string;
+  clientPhone?: string;
+  /** Usuario/contacto en el comercio al que se le vendió */
+  contactUserId: string;
+  contactUserName: string;
+  /** Sucursal donde se retira o desde donde se envía */
+  branchId: string;
+  branchName?: string;
+  items: VentaCalleItem[];
+  subtotal: number;
+  discount: number;
+  total: number;
+  status: VentaCalleStatus;
+  paymentMethod: PaymentMethod | 'Cuenta corriente' | 'Transferencia';
+  /** Número de remito generado */
+  remitoNumber?: string;
+  remitoId?: string;
+  ordenRetiroId?: string;
+  observaciones?: string;
+}
+
+export interface Remito {
+  id: string;
+  number: string;
+  date: string;
+  ventaCalleId: string;
+  clientName: string;
+  clientAddress?: string;
+  clientCuit?: string;
+  items: VentaCalleItem[];
+  total: number;
+  sellerName: string;
+  branchId: string;
+  branchName?: string;
+}
+
+export type OrdenRetiroStatus = 'PENDIENTE' | 'PREPARADA' | 'RETIRADA';
+
+export interface OrdenRetiro {
+  id: string;
+  ventaCalleId: string;
+  remitoId?: string;
+  remitoNumber?: string;
+  branchId: string;
+  branchName?: string;
+  date: string;
+  items: VentaCalleItem[];
+  sellerId: string;
+  sellerName: string;
+  clientName: string;
+  status: OrdenRetiroStatus;
+  /** Cuando el vendedor retiró en sucursal */
+  retiradoAt?: string;
 }

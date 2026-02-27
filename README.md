@@ -2,6 +2,8 @@
 
 Sistema de gestión integral para supermercados: POS multi-caja, inventario (depósito/góndola), reposición con escaneo, reportes, promociones y finanzas.
 
+Los datos se persisten hoy en **localStorage** a través de una capa de **servicios** (`services/`). Esa capa está preparada para sustituirse por un backend/API sin cambiar la UI. Ver [ARCHITECTURE.md](ARCHITECTURE.md) para detalles.
+
 ## Ejecutar en local
 
 **Requisitos:** Node.js 18+
@@ -32,6 +34,14 @@ Sistema de gestión integral para supermercados: POS multi-caja, inventario (dep
 npm run build
 ```
 
+## Tests
+
+```bash
+npm run test
+```
+
+Tests unitarios de la capa de servicios (Vitest) en `services/__tests__/`. Ejecutan con un adapter de storage mock para no usar localStorage.
+
 ## Desplegar en Vercel (automático)
 
 1. Subí el código a GitHub (este repo: `Contak-cpu/n2`, rama `main`).
@@ -46,3 +56,4 @@ npm run build
 - **Supervisor:** `supervisor` / `123`
 - **Cajeros:** `caja1`–`caja4` / `123`
 - **Repositores:** `repo1`, `repo2` / `123`
+- **Vendedores:** `vendedor1` … `vendedor9` / `123` (admin puede activar/desactivar y definir días de trabajo)

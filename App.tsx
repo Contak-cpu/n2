@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useCallback, useEffect, useRef } from 'react';
+import { BrowserRouter, useLocation, useNavigate } from 'react-router-dom';
 import { Layout } from './components/Layout';
 import { POS } from './pages/POS';
 import { Inventory } from './pages/Inventory';
@@ -15,29 +16,77 @@ import { Settings } from './pages/Settings';
 import { Cajas } from './pages/Cajas';
 import { Inicio } from './pages/Inicio';
 import { Distribucion } from './pages/Distribucion';
+import { VendedorCalle } from './pages/VendedorCalle';
 import { useStore } from './hooks/useStore';
 import { INITIAL_USERS, BRANCHES } from './constants';
 import { TransactionType, CartItem, Client, Transaction } from './types';
+import { pathToTab, tabToPath, DEFAULT_TAB_BY_ROLE, canAccessTab } from './routes';
 
-const DEFAULT_TAB_BY_ROLE: Record<string, string> = {
-  ADMIN: 'inicio',
-  SUPERVISOR: 'inicio',
-  CASHIER: 'inicio',
-  REPOSITOR: 'inicio',
-};
-
-const App: React.FC = () => {
+function AppRoutes() {
   const store = useStore();
-  const [activeTab, setActiveTab] = useState(() => {
-    return DEFAULT_TAB_BY_ROLE[store.currentUser?.role ?? 'CASHIER'] ?? 'inicio';
-  });
+  const location = useLocation();
+  const navigate = useNavigate();
+  const activeTab = pathToTab(location.pathname);
 
-  // Al iniciar sesión (o cambiar usuario), ir a la sección por defecto del rol para no dejar pantalla en blanco
-  React.useEffect(() => {
-    if (store.currentUser) {
-      setActiveTab(DEFAULT_TAB_BY_ROLE[store.currentUser.role] ?? 'inicio');
+  useEffect(() => {
+    if (!store.currentUser) return;
+    if (!canAccessTab(activeTab, store.currentUser.role)) {
+      navigate(tabToPath(DEFAULT_TAB_BY_ROLE[store.currentUser.role]));
+      return;
     }
-  }, [store.currentUser?.id]);
+  }, [store.currentUser, activeTab, navigate]);
+
+  const hadUserRef = useRef(false);
+  useEffect(() => {
+    if (store.currentUser && !hadUserRef.current) {
+      hadUserRef.current = true;
+      navigate(tabToPath(DEFAULT_TAB_BY_ROLE[store.currentUser.role]));
+    }
+    if (!store.currentUser) hadUserRef.current = false;
+  }, [store.currentUser, navigate]);
+
+  const handleTabChange = useCallback(
+    (tab: string) => {
+      if (!store.currentUser) return;
+      if (!canAccessTab(tab, store.currentUser.role)) return;
+      navigate(tabToPath(tab));
+    },
+    [store.currentUser, navigate]
+  );
+
+  const handleCheckout = useCallback(
+    (lineId: string | undefined, cart: CartItem[], total: number, method: unknown, client: Client): Transaction => {
+      const line = lineId ? store.getCheckoutLinesWithStats().find((l) => l.id === lineId) : null;
+      const branchId = line?.branchId;
+      const newTransaction: Transaction = {
+        id: Date.now().toString(),
+        date: new Date().toISOString(),
+        type: TransactionType.INCOME,
+        amount: total,
+        description: `Venta POS - ${client.name}`,
+        method: method as Transaction['method'],
+        cashierName: store.currentUser?.username ?? store.currentUser?.fullName,
+        clientName: client.name,
+        items: cart,
+        lineId,
+        branchId,
+        status: 'COMPLETED',
+      };
+      store.addTransaction(newTransaction);
+      store.updateStock(cart.map((item) => ({ id: item.id, quantity: item.quantity })));
+      if (lineId) {
+        const lineAfter = store.getCheckoutLinesWithStats().find((l) => l.id === lineId);
+        if (lineAfter) {
+          store.updateCheckoutLine(lineId, {
+            totalSales: lineAfter.totalSales + total,
+            transactionCount: lineAfter.transactionCount + 1,
+          });
+        }
+      }
+      return newTransaction;
+    },
+    [store]
+  );
 
   if (!store.currentUser) {
     return <Login onLogin={store.login} />;
@@ -46,56 +95,6 @@ const App: React.FC = () => {
   const role = store.currentUser.role;
   const isAdmin = role === 'ADMIN';
   const isSupervisor = role === 'SUPERVISOR';
-
-  const handleCheckout = (
-    lineId: string | undefined,
-    cart: CartItem[],
-    total: number,
-    method: any,
-    client: Client
-  ): Transaction => {
-    const line = lineId ? store.getCheckoutLinesWithStats().find(l => l.id === lineId) : null;
-    const branchId = line?.branchId;
-    const newTransaction: Transaction = {
-      id: Date.now().toString(),
-      date: new Date().toISOString(),
-      type: TransactionType.INCOME,
-      amount: total,
-      description: `Venta POS - ${client.name}`,
-      method: method,
-      cashierName: store.currentUser?.username ?? store.currentUser?.fullName,
-      clientName: client.name,
-      items: cart,
-      lineId,
-      branchId,
-      status: 'COMPLETED',
-    };
-    store.addTransaction(newTransaction);
-    store.updateStock(cart.map(item => ({ id: item.id, quantity: item.quantity })));
-    if (lineId) {
-      const line = store.getCheckoutLinesWithStats().find(l => l.id === lineId);
-      if (line) {
-        store.updateCheckoutLine(lineId, {
-          totalSales: line.totalSales + total,
-          transactionCount: line.transactionCount + 1,
-        });
-      }
-    }
-    return newTransaction;
-  };
-
-  const handleTabChange = (tab: string) => {
-    const adminOnly = ['finance', 'egresos', 'suppliers', 'promotions', 'audit', 'users', 'settings'];
-    const supervisorAllowed = ['inicio', 'pos', 'inventory', 'reports', 'cajas', 'distribucion'];
-    const cashierAllowed = ['inicio', 'pos'];
-    const repositorAllowed = ['inicio', 'repositor'];
-
-    if (tab === 'inicio') { setActiveTab(tab); return; }
-    if (isAdmin) { setActiveTab(tab); return; }
-    if (isSupervisor && supervisorAllowed.includes(tab)) { setActiveTab(tab); return; }
-    if (role === 'CASHIER' && cashierAllowed.includes(tab)) { setActiveTab(tab); return; }
-    if (role === 'REPOSITOR' && repositorAllowed.includes(tab)) { setActiveTab(tab); return; }
-  };
 
   const transactionsForView = store.getTransactionsByBranch(store.selectedBranchId);
   const checkoutLinesForView = store.getCheckoutLinesByBranch(store.selectedBranchId);
@@ -110,7 +109,6 @@ const App: React.FC = () => {
       selectedBranchId={store.selectedBranchId}
       onSelectedBranchChange={store.setSelectedBranchId}
     >
-      {/* INICIO - todos los roles (contenido según rol) */}
       {activeTab === 'inicio' && (
         <Inicio
           currentUser={store.currentUser}
@@ -121,11 +119,10 @@ const App: React.FC = () => {
           users={store.users}
           currentBalance={store.getBalance()}
           egresos={store.egresos}
-          onNavigate={setActiveTab}
+          onNavigate={handleTabChange}
         />
       )}
 
-      {/* POS - accesible para Admin, Supervisor, Cajero */}
       {activeTab === 'pos' && role !== 'REPOSITOR' && (
         <POS
           products={store.products}
@@ -141,7 +138,6 @@ const App: React.FC = () => {
         />
       )}
 
-      {/* INVENTARIO - Admin y Supervisor */}
       {activeTab === 'inventory' && (isAdmin || isSupervisor) && (
         <Inventory
           products={store.products}
@@ -150,7 +146,6 @@ const App: React.FC = () => {
         />
       )}
 
-      {/* CAJA Y FINANZAS - solo Admin */}
       {activeTab === 'finance' && isAdmin && (
         <Finance
           transactions={store.transactions}
@@ -159,7 +154,6 @@ const App: React.FC = () => {
         />
       )}
 
-      {/* EGRESOS - solo Admin */}
       {activeTab === 'egresos' && isAdmin && (
         <Egresos
           egresos={store.egresos}
@@ -169,7 +163,6 @@ const App: React.FC = () => {
         />
       )}
 
-      {/* PROVEEDORES - solo Admin */}
       {activeTab === 'suppliers' && isAdmin && (
         <Suppliers
           suppliers={store.suppliers}
@@ -178,7 +171,6 @@ const App: React.FC = () => {
         />
       )}
 
-      {/* PROMOCIONES - solo Admin */}
       {activeTab === 'promotions' && isAdmin && (
         <Promotions
           promotions={store.promotions}
@@ -187,7 +179,6 @@ const App: React.FC = () => {
         />
       )}
 
-      {/* CAJAS - Admin y Supervisor */}
       {activeTab === 'cajas' && (isAdmin || isSupervisor) && (
         <Cajas
           checkoutLines={checkoutLinesForView}
@@ -198,7 +189,6 @@ const App: React.FC = () => {
         />
       )}
 
-      {/* REPORTES - Admin y Supervisor */}
       {activeTab === 'reports' && (isAdmin || isSupervisor) && (
         <Reports
           transactions={transactionsForView}
@@ -208,7 +198,6 @@ const App: React.FC = () => {
         />
       )}
 
-      {/* DISTRIBUCIÓN / TRAZABILIDAD - Admin y Supervisor */}
       {activeTab === 'distribucion' && (isAdmin || isSupervisor) && (
         <Distribucion
           despachos={store.despachos}
@@ -220,7 +209,6 @@ const App: React.FC = () => {
         />
       )}
 
-      {/* REPOSITOR - solo Repositor (y Admin para pruebas) */}
       {activeTab === 'repositor' && (role === 'REPOSITOR' || isAdmin) && (
         <Repositor
           products={store.products}
@@ -231,17 +219,15 @@ const App: React.FC = () => {
         />
       )}
 
-      {/* AUDITORÍA - solo Admin */}
       {activeTab === 'audit' && isAdmin && (
         <AuditLog
           auditLogs={store.auditLogs}
-          users={store.users.map(u => ({ id: u.id, fullName: u.fullName }))}
+          users={store.users.map((u) => ({ id: u.id, fullName: u.fullName }))}
           onAddEntry={store.addAuditLog}
           currentUserId={store.currentUser?.id ?? ''}
         />
       )}
 
-      {/* USUARIOS - solo Admin */}
       {activeTab === 'users' && isAdmin && (
         <Users
           users={store.users}
@@ -252,10 +238,32 @@ const App: React.FC = () => {
         />
       )}
 
-      {/* CONFIGURACIÓN - solo Admin */}
       {activeTab === 'settings' && isAdmin && <Settings />}
+
+      {activeTab === 'vendedor-calle' && (role === 'VENDEDOR_CALLE' || isAdmin) && (
+        <VendedorCalle
+          currentUser={store.currentUser}
+          ventasCalle={store.ventasCalle}
+          clients={store.clients}
+          users={store.users}
+          products={store.products}
+          branches={BRANCHES}
+          onAddVentaCalle={store.addVentaCalle}
+          onUpdateVentaCalle={store.updateVentaCalle}
+          onLoadVentasCalle={store.loadVentasCalle}
+          getVentasCalleBySeller={store.getVentasCalleBySeller}
+          onUpdateUser={store.updateUser}
+          isAdmin={isAdmin}
+        />
+      )}
     </Layout>
   );
-};
+}
+
+const App: React.FC = () => (
+  <BrowserRouter>
+    <AppRoutes />
+  </BrowserRouter>
+);
 
 export default App;
