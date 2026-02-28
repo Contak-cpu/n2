@@ -11,7 +11,7 @@ export function getCurrentUser(): User | null {
 /** Inicia sesión. Devuelve el usuario si las credenciales son válidas, null en caso contrario. */
 export function login(username: string, password: string): User | null {
   const users = getJson<User[]>(STORAGE_KEYS.USERS) ?? INITIAL_USERS;
-  const user = users.find((u) => u.username === username && u.password === password);
+  const user = users.find((u) => u.username.toLowerCase() === username.trim().toLowerCase() && u.password === password);
   if (user) {
     setJson(STORAGE_KEYS.CURRENT_USER, user);
     return user;
